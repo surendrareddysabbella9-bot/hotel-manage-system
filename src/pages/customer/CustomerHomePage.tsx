@@ -1,136 +1,123 @@
 import { Link } from "react-router-dom";
-import { UtensilsCrossed, Calendar, ArrowRight, Sparkles, Clock, MapPin } from "lucide-react";
+import { Utensils, Calendar, Clock, Sparkles, ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { FoodCard } from "@/components/cards/FoodCard";
+import { ReservationCard } from "@/components/cards/ReservationCard";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ROUTES } from "@/constants";
-import { mockMenuItems, mockOrders, mockReservations } from "@/mocks";
+import { useMenu } from "@/hooks/useMenu";
+import { useOrders } from "@/hooks/useOrders";
+import { useReservations } from "@/hooks/useReservations";
 
 export function CustomerHomePage() {
-  const featuredItems = mockMenuItems.slice(0, 3);
-  const activeOrder = mockOrders.find((o) => o.status !== "served" && o.status !== "cancelled");
-  const upcomingReservation = mockReservations.find((r) => r.status === "confirmed");
+  const { items: menuItems, isLoading: isMenuLoading } = useMenu();
+  const { orders, isLoading: isOrdersLoading } = useOrders();
+  const { reservations, isLoading: isResLoading } = useReservations();
+
+  const featuredItems = menuItems.slice(0, 3);
+  const activeOrder = orders.find((o) => o.status !== "served" && o.status !== "cancelled");
+  const upcomingReservation = reservations.find((r) => r.status === "confirmed");
+
+  const isLoading = isMenuLoading || isOrdersLoading || isResLoading;
+
+  if (isLoading) {
+    return <LoadingSkeleton variant="page" />;
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-background p-6 sm:p-8 border border-primary/20">
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
-            <Sparkles className="size-3.5" />
-            Welcome back, Sarah!
+    <div className="space-y-10 pb-12">
+      {/* Hero Banner */}
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-r from-primary/90 via-primary to-amber-600 p-8 sm:p-12 text-primary-foreground shadow-xl">
+        <div className="relative z-10 max-w-2xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur-md">
+            <Sparkles className="size-3.5 text-amber-300" />
+            Chef's Special Tasting Menu Available
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Ready for a memorable dining experience?
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl">
+            Savor Authentic Culinary Excellence
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Explore our chef-curated menu, book your preferred table, or track your live order in real-time.
+          <p className="text-sm sm:text-base opacity-90 leading-relaxed">
+            Order fresh meals right from your phone, reserve private tables, or track your kitchen ticket in real time.
           </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Button asChild>
-              <Link to={ROUTES.customer.menu} className="gap-2">
-                <UtensilsCrossed className="size-4" />
-                Browse Menu
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <Button size="lg" variant="secondary" className="rounded-full gap-2 font-semibold shadow-md" asChild>
+              <Link to={ROUTES.customer.menu}>
+                <Utensils className="size-4" /> Order Food Now
               </Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link to={ROUTES.customer.reservation} className="gap-2">
-                <Calendar className="size-4" />
-                Book Table
+            <Button size="lg" variant="outline" className="rounded-full bg-white/10 border-white/20 hover:bg-white/20 text-white gap-2 font-semibold" asChild>
+              <Link to={ROUTES.customer.reservation}>
+                <Calendar className="size-4" /> Reserve a Table
               </Link>
             </Button>
           </div>
         </div>
+
+        {/* Ambient Overlay Design Glow */}
+        <div className="absolute -right-12 -top-12 size-96 rounded-full bg-white/10 blur-3xl" />
+      </section>
+
+      {/* Active Ticket Banner / Upcoming Reservation Notification */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {activeOrder && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Clock className="size-4 text-primary animate-pulse" />
+                Active Kitchen Order #{activeOrder.orderNumber}
+              </CardTitle>
+              <Button size="sm" variant="ghost" className="text-xs gap-1" asChild>
+                <Link to={ROUTES.customer.tracking}>Track Status <ArrowRight className="size-3" /></Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <p className="text-xs text-muted-foreground">
+                Your order is currently <span className="font-semibold text-primary capitalize">{activeOrder.status}</span>. Estimated prep time ~15 mins.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {upcomingReservation && (
+          <Card className="border-success/30 bg-success/5">
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Calendar className="size-4 text-success" />
+                Upcoming Table Reservation
+              </CardTitle>
+              <Button size="sm" variant="ghost" className="text-xs gap-1" asChild>
+                <Link to={ROUTES.customer.reservation}>View All <ArrowRight className="size-3" /></Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <ReservationCard reservation={upcomingReservation} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* Active Status Widgets */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Active Order Card */}
-        <Card className="border-primary/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold">Active Order</CardTitle>
-            <Badge variant="warning" className="capitalize">
-              {activeOrder?.status || "Cooking"}
-            </Badge>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {activeOrder ? (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Order #{activeOrder.orderNumber}</span>
-                  <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                    <Clock className="size-3" /> ~15 min remaining
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  {activeOrder.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
-                </p>
-                <Button size="sm" variant="secondary" className="w-full gap-2" asChild>
-                  <Link to={ROUTES.customer.tracking}>
-                    Track Live Progress
-                    <ArrowRight className="size-3.5" />
-                  </Link>
-                </Button>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">No active orders right now.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Reservation Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold">Upcoming Reservation</CardTitle>
-            <Badge variant="success">Confirmed</Badge>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {upcomingReservation ? (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{upcomingReservation.date} at {upcomingReservation.time}</span>
-                  <span className="text-muted-foreground text-xs">{upcomingReservation.partySize} Guests</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <MapPin className="size-3.5" />
-                  Table {upcomingReservation.tableNumber} (Main Dining)
-                </div>
-                <Button size="sm" variant="outline" className="w-full gap-2" asChild>
-                  <Link to={ROUTES.customer.reservation}>
-                    View Reservation Details
-                    <ArrowRight className="size-3.5" />
-                  </Link>
-                </Button>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">No upcoming table reservations.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Chef Recommendations / Popular Dishes */}
-      <div className="space-y-4">
+      {/* Featured Chef Specials */}
+      <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Chef&apos;s Highlights</h2>
-            <p className="text-xs text-muted-foreground">Most ordered signature dishes of the week</p>
+            <h2 className="text-xl font-bold">Popular Dishes Today</h2>
+            <p className="text-xs text-muted-foreground">Top-rated favorites handpicked by our executive chef</p>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to={ROUTES.customer.menu} className="gap-1 text-xs">
-              View All <ArrowRight className="size-3.5" />
+              View Full Menu <ArrowRight className="size-3.5" />
             </Link>
           </Button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featuredItems.map((item) => (
-            <FoodCard key={item.id} item={item} />
+            <FoodCard key={item.id} item={item} onAddToCart={() => {}} />
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

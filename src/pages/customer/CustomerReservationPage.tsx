@@ -8,21 +8,21 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ReservationCard } from "@/components/cards/ReservationCard";
-import { mockReservations } from "@/mocks";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { useReservations } from "@/hooks/useReservations";
 import type { Reservation } from "@/types";
 
 export function CustomerReservationPage() {
-  const [reservations, setReservations] = useState<Reservation[]>(mockReservations);
+  const { reservations, isLoading, createReservation } = useReservations();
   const [date, setDate] = useState("2026-07-26");
   const [time, setTime] = useState("19:00");
   const [partySize, setPartySize] = useState("4");
   const [specialRequests, setSpecialRequests] = useState("");
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
-  const handleBookTable = (e: React.FormEvent) => {
+  const handleBookTable = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newReservation: Reservation = {
-      id: `res-${Date.now()}`,
+    const newReservation: Omit<Reservation, "id"> = {
       customerId: "user-002",
       customerName: "Sarah Chen",
       partySize: parseInt(partySize, 10),
@@ -32,7 +32,7 @@ export function CustomerReservationPage() {
       specialRequests: specialRequests || undefined,
     };
 
-    setReservations([newReservation, ...reservations]);
+    await createReservation(newReservation);
     setIsSuccessOpen(true);
   };
 
@@ -123,11 +123,15 @@ export function CustomerReservationPage() {
             <Clock className="size-4 text-primary" />
             Your Reservations ({reservations.length})
           </h3>
-          <div className="space-y-3">
-            {reservations.map((res) => (
-              <ReservationCard key={res.id} reservation={res} />
-            ))}
-          </div>
+          {isLoading ? (
+            <LoadingSkeleton variant="table" count={3} />
+          ) : (
+            <div className="space-y-3">
+              {reservations.map((res) => (
+                <ReservationCard key={res.id} reservation={res} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,19 +1,21 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Utensils, ShoppingBag } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, CreditCard } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ROUTES } from "@/constants";
-import { mockMenuItems } from "@/mocks";
+import { useMenu } from "@/hooks/useMenu";
 
-interface CartItemState {
+interface CartItem {
   id: string;
+  menuItemId: string;
   name: string;
   price: number;
   quantity: number;
@@ -21,31 +23,48 @@ interface CartItemState {
 }
 
 export function CartPage() {
-  const navigate = useNavigate();
-  const [items, setItems] = useState<CartItemState[]>([
-    {
-      id: "item-001",
-      name: mockMenuItems[0].name,
-      price: mockMenuItems[0].price,
-      quantity: 2,
-      imageUrl: mockMenuItems[0].imageUrl,
-    },
-    {
-      id: "item-003",
-      name: mockMenuItems[2].name,
-      price: mockMenuItems[2].price,
-      quantity: 1,
-      imageUrl: mockMenuItems[2].imageUrl,
-    },
-  ]);
+  const { items: menuItems, isLoading } = useMenu();
 
-  const [orderType, setOrderType] = useState<"dine-in" | "takeout">("dine-in");
-  const [tableNumber, setTableNumber] = useState("7");
-  const [notes, setNotes] = useState("");
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (menuItems.length >= 2) {
+      return [
+        {
+          id: "cart-1",
+          menuItemId: menuItems[0].id,
+          name: menuItems[0].name,
+          price: menuItems[0].price,
+          quantity: 2,
+          imageUrl: menuItems[0].imageUrl,
+        },
+        {
+          id: "cart-2",
+          menuItemId: menuItems[1].id,
+          name: menuItems[1].name,
+          price: menuItems[1].price,
+          quantity: 1,
+          imageUrl: menuItems[1].imageUrl,
+        },
+      ];
+    }
+    return [
+      {
+        id: "cart-1",
+        menuItemId: "item-001",
+        name: "Butter Chicken",
+        price: 350,
+        quantity: 2,
+        imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
+      },
+    ];
+  });
+
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [tableNumber, setTableNumber] = useState("4");
+  const [orderType, setOrderType] = useState<"dine_in" | "takeout">("dine_in");
 
   const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
+    setCart((prev) =>
       prev
         .map((item) => {
           if (item.id === id) {
@@ -54,212 +73,200 @@ export function CartPage() {
           }
           return item;
         })
-        .filter(Boolean) as CartItemState[]
+        .filter(Boolean) as CartItem[]
     );
   };
 
   const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.08;
-  const serviceCharge = orderType === "dine-in" ? subtotal * 0.05 : 0;
-  const total = subtotal + tax + serviceCharge;
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const tax = subtotal * 0.05; // 5% GST
+  const finalDiscount = (subtotal * discount) / 100;
+  const total = subtotal + tax - finalDiscount;
 
-  const handleCheckout = () => {
-    setIsSuccessOpen(true);
+  const applyPromo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (promoCode.toUpperCase() === "WELCOME10") {
+      setDiscount(10);
+    }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link to={ROUTES.customer.menu}>
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <PageHeader title="Your Cart" description="Review items before sending your order to the kitchen" />
-      </div>
+    <div className="space-y-8 max-w-5xl mx-auto pb-16">
+      <PageHeader
+        title="Your Dining Basket"
+        description="Review selected dishes, apply discounts, and place your order"
+      />
 
-      {items.length > 0 ? (
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Itemized Cart List */}
+      {isLoading ? (
+        <LoadingSkeleton variant="page" />
+      ) : cart.length === 0 ? (
+        <EmptyState
+          title="Your basket is empty"
+          description="Looks like you haven't added any dishes to your basket yet."
+          actionLabel="Explore Menu"
+          onAction={() => window.location.href = ROUTES.customer.menu}
+        />
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Cart Items List */}
           <div className="lg:col-span-2 space-y-4">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Order Items ({items.length})</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <ShoppingBag className="size-4 text-primary" />
+                  Order Items ({cart.length})
+                </CardTitle>
+                <Badge variant="outline" className="capitalize">
+                  {orderType.replace("_", " ")}
+                </Badge>
               </CardHeader>
               <CardContent className="divide-y divide-border">
-                {items.map((item) => (
-                  <div key={item.id} className="py-4 flex items-center gap-4 first:pt-0 last:pb-0">
+                {cart.map((item) => (
+                  <div key={item.id} className="py-4 flex gap-4 items-center">
                     <img
                       src={item.imageUrl}
                       alt={item.name}
-                      className="size-16 rounded-lg object-cover shrink-0"
+                      className="size-16 rounded-xl object-cover shrink-0"
                     />
                     <div className="flex-1 space-y-1">
                       <h4 className="font-semibold text-sm">{item.name}</h4>
-                      <p className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</p>
+                      <p className="text-xs text-muted-foreground">₹{item.price.toFixed(2)} each</p>
                     </div>
-                    <div className="flex items-center gap-2">
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-2 border border-border rounded-lg p-1">
                       <Button
                         size="icon"
-                        variant="outline"
-                        className="size-7"
+                        variant="ghost"
+                        className="size-6 rounded-md"
                         onClick={() => updateQuantity(item.id, -1)}
                       >
                         <Minus className="size-3" />
                       </Button>
-                      <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
+                      <span className="text-xs font-semibold w-4 text-center">{item.quantity}</span>
                       <Button
                         size="icon"
-                        variant="outline"
-                        className="size-7"
+                        variant="ghost"
+                        className="size-6 rounded-md"
                         onClick={() => updateQuantity(item.id, 1)}
                       >
                         <Plus className="size-3" />
                       </Button>
                     </div>
-                    <span className="font-semibold text-sm w-16 text-right">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </span>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-sm">₹{(item.price * item.quantity).toFixed(2)}</p>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="size-6 text-muted-foreground hover:text-destructive mt-1"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </CardContent>
             </Card>
 
-            {/* Special Instructions & Dining Type */}
+            {/* Order Preference Details */}
             <Card>
-              <CardContent className="pt-6 space-y-4">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">Dining Details</CardTitle>
+              </CardHeader>
+              <CardContent className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Order Type</Label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <Label>Order Type</Label>
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
-                      type="button"
-                      variant={orderType === "dine-in" ? "default" : "outline"}
-                      className="gap-2"
-                      onClick={() => setOrderType("dine-in")}
+                      variant={orderType === "dine_in" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setOrderType("dine_in")}
                     >
-                      <Utensils className="size-4" /> Dine-In
+                      Dine In
                     </Button>
                     <Button
-                      type="button"
                       variant={orderType === "takeout" ? "default" : "outline"}
-                      className="gap-2"
+                      size="sm"
                       onClick={() => setOrderType("takeout")}
                     >
-                      <ShoppingBag className="size-4" /> Takeout
+                      Takeout
                     </Button>
                   </div>
                 </div>
 
-                {orderType === "dine-in" && (
+                {orderType === "dine_in" && (
                   <div className="space-y-2">
                     <Label htmlFor="tableNumber">Table Number</Label>
                     <Input
                       id="tableNumber"
-                      type="number"
                       value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
-                      placeholder="e.g. 7"
+                      placeholder="e.g. Table 4"
                     />
                   </div>
                 )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Special Preparation Instructions</Label>
-                  <Input
-                    id="notes"
-                    placeholder="e.g. Extra sauce, no onions, allergy alert..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Order Summary & Pricing Breakdown */}
-          <div className="space-y-4">
+          {/* Order Summary & Checkout */}
+          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base font-semibold">Order Summary</CardTitle>
+                <CardTitle className="text-base font-semibold">Bill Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Tax (8%)</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>Taxes (5% GST)</span>
+                  <span>₹{tax.toFixed(2)}</span>
                 </div>
-                {orderType === "dine-in" && (
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Service Fee (5%)</span>
-                    <span>${serviceCharge.toFixed(2)}</span>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-success font-medium">
+                    <span>Discount ({discount}%)</span>
+                    <span>-₹{finalDiscount.toFixed(2)}</span>
                   </div>
                 )}
-                <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">${total.toFixed(2)}</span>
+
+                <div className="border-t border-border pt-3 flex justify-between font-bold text-base">
+                  <span>Total Amount</span>
+                  <span className="text-primary">₹{total.toFixed(2)}</span>
                 </div>
               </CardContent>
-              <CardFooter className="pt-2">
-                <Button className="w-full" size="lg" onClick={handleCheckout}>
-                  Place Order Now
+
+              <CardFooter className="flex-col space-y-3">
+                <form onSubmit={applyPromo} className="flex gap-2 w-full">
+                  <Input
+                    placeholder="Promo code (WELCOME10)"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    className="text-xs"
+                  />
+                  <Button type="submit" variant="secondary" size="sm">
+                    Apply
+                  </Button>
+                </form>
+
+                <Button className="w-full gap-2 font-semibold" size="lg" asChild>
+                  <Link to={ROUTES.customer.tracking}>
+                    <CreditCard className="size-4" /> Place & Pay ₹{total.toFixed(2)}
+                    <ArrowRight className="size-4 ml-auto" />
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
           </div>
         </div>
-      ) : (
-        <Card className="p-8 text-center space-y-4">
-          <ShoppingBag className="mx-auto size-12 text-muted-foreground/40" />
-          <h3 className="text-lg font-semibold">Your Cart is Empty</h3>
-          <p className="text-sm text-muted-foreground">Looks like you haven&apos;t added any delicious items yet.</p>
-          <Button asChild>
-            <Link to={ROUTES.customer.menu}>Browse Menu</Link>
-          </Button>
-        </Card>
       )}
-
-      {/* Order Sent Dialog */}
-      <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
-        <DialogContent className="sm:max-w-md text-center">
-          <DialogHeader className="items-center">
-            <CheckCircle2 className="size-12 text-success mb-2" />
-            <DialogTitle>Order Sent to Kitchen!</DialogTitle>
-            <DialogDescription>
-              Your order <span className="font-semibold text-foreground">#1044</span> has been received and is being prepared by our kitchen team.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            <Button
-              className="w-full"
-              onClick={() => {
-                setIsSuccessOpen(false);
-                navigate(ROUTES.customer.tracking);
-              }}
-            >
-              Track Order Progress
-            </Button>
-            <Button variant="ghost" className="w-full" onClick={() => setIsSuccessOpen(false)}>
-              Back to Menu
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

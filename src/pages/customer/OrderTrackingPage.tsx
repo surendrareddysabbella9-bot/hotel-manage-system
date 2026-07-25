@@ -1,113 +1,124 @@
-import { Clock, ChefHat, CheckCircle2, Utensils, MapPin } from "lucide-react";
+import { Clock, CheckCircle2, ChefHat, UtensilsCrossed, Sparkles } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { mockOrders } from "@/mocks";
-import type { OrderStatus } from "@/types";
-
-const steps: { status: OrderStatus; label: string; icon: React.ElementType }[] = [
-  { status: "pending", label: "Received", icon: Clock },
-  { status: "cooking", label: "Cooking", icon: ChefHat },
-  { status: "ready", label: "Ready", icon: CheckCircle2 },
-  { status: "served", label: "Served", icon: Utensils },
-];
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useOrders } from "@/hooks/useOrders";
 
 export function OrderTrackingPage() {
-  const currentOrder = mockOrders[0]; // Order #1042 (status: cooking)
+  const { orders, isLoading } = useOrders();
 
-  const getStepStatus = (stepStatus: OrderStatus) => {
-    const statusOrder: OrderStatus[] = ["pending", "cooking", "ready", "served"];
-    const currentIndex = statusOrder.indexOf(currentOrder.status);
-    const stepIndex = statusOrder.indexOf(stepStatus);
+  const currentOrder = orders[0];
 
-    if (stepIndex < currentIndex) return "completed";
-    if (stepIndex === currentIndex) return "current";
-    return "upcoming";
-  };
+  const steps = [
+    { id: "pending", label: "Order Received", icon: Clock, desc: "Your order ticket has reached the kitchen." },
+    { id: "cooking", label: "Cooking & Preparation", icon: ChefHat, desc: "Our executive chef is preparing your meal." },
+    { id: "ready", label: "Ready for Pickup/Service", icon: UtensilsCrossed, desc: "Your dishes are hot and plated." },
+    { id: "served", label: "Order Completed", icon: CheckCircle2, desc: "Enjoy your dining experience!" },
+  ];
+
+  if (isLoading) {
+    return <LoadingSkeleton variant="page" />;
+  }
+
+  if (!currentOrder) {
+    return (
+      <EmptyState
+        title="No active order found"
+        description="You have no current active order tickets in progress."
+      />
+    );
+  }
+
+  const currentStepIndex = steps.findIndex((s) => s.id === currentOrder.status);
+  const progressPercent = Math.max(25, ((currentStepIndex + 1) / steps.length) * 100);
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto pb-16">
       <PageHeader
-        title={`Order #${currentOrder.orderNumber} Status`}
-        description="Track your dish from preparation to table delivery in real-time"
+        title={`Live Ticket Tracking #${currentOrder.orderNumber}`}
+        description="Real-time kitchen status progression and live order ticket updates"
       />
 
-      {/* Progress Timeline Card */}
-      <Card className="border-primary/20 bg-gradient-to-b from-card to-background">
-        <CardHeader className="text-center pb-2">
-          <Badge variant="warning" className="mx-auto uppercase tracking-wider text-xs px-3 py-1 mb-2">
-            Status: {currentOrder.status}
+      {/* Main Order Tracker Card */}
+      <Card className="border-primary/20 shadow-md">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <div>
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Sparkles className="size-5 text-primary" />
+              Ticket #{currentOrder.orderNumber}
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">Placed at {new Date(currentOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+          <Badge variant={currentOrder.status === "served" ? "success" : "warning"} className="capitalize px-3 py-1 text-xs">
+            {currentOrder.status}
           </Badge>
-          <CardTitle className="text-2xl font-bold">Estimated Time: ~12 Mins</CardTitle>
-          <p className="text-xs text-muted-foreground">Kitchen team is actively cooking your meals</p>
         </CardHeader>
-        <CardContent className="pt-6">
-          {/* Visual Timeline Steps */}
-          <div className="relative flex items-center justify-between">
-            <div className="absolute left-0 top-1/2 -z-0 h-1 w-full -translate-y-1/2 bg-muted">
-              <div className="h-full bg-primary transition-all duration-500 w-1/2" />
-            </div>
 
-            {steps.map((step) => {
-              const state = getStepStatus(step.status);
+        <CardContent className="space-y-8">
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold">
+              <span>Preparation Progress</span>
+              <span>{progressPercent}% Complete</span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full bg-primary transition-all duration-500 ease-in-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Stepper Timeline */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {steps.map((step, idx) => {
               const Icon = step.icon;
+              const isDone = idx <= currentStepIndex;
+              const isCurrent = idx === currentStepIndex;
+
               return (
-                <div key={step.status} className="relative z-10 flex flex-col items-center gap-2">
+                <div
+                  key={step.id}
+                  className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                    isCurrent
+                      ? "border-primary bg-primary/5 shadow-xs"
+                      : isDone
+                      ? "border-success/40 bg-success/5"
+                      : "border-border opacity-50"
+                  }`}
+                >
                   <div
-                    className={`flex size-12 items-center justify-center rounded-full border-2 transition-all ${
-                      state === "completed"
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : state === "current"
-                        ? "border-primary bg-background text-primary ring-4 ring-primary/20 animate-pulse"
-                        : "border-muted bg-card text-muted-foreground"
+                    className={`flex size-10 items-center justify-center rounded-full ${
+                      isCurrent
+                        ? "bg-primary text-primary-foreground animate-pulse"
+                        : isDone
+                        ? "bg-success text-success-foreground"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     <Icon className="size-5" />
                   </div>
-                  <span
-                    className={`text-xs font-semibold ${
-                      state === "current" ? "text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
+                  <h4 className="font-semibold text-xs">{step.label}</h4>
+                  <p className="text-[11px] text-muted-foreground leading-tight">{step.desc}</p>
                 </div>
               );
             })}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Order Itemized Receipt Details */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Order Details</CardTitle>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <MapPin className="size-3.5" /> Table {currentOrder.tableNumber}
-            </span>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="divide-y divide-border text-sm">
-            {currentOrder.items.map((item) => (
-              <div key={item.id} className="py-3 flex justify-between items-center first:pt-0 last:pb-0">
-                <div>
-                  <p className="font-semibold">{item.quantity}x {item.name}</p>
-                  <p className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</p>
+          {/* Ticket Items Summary */}
+          <div className="border-t border-border pt-4 space-y-2">
+            <h4 className="font-semibold text-xs uppercase text-muted-foreground">Order Ticket Contents</h4>
+            <div className="divide-y divide-border text-xs">
+              {currentOrder.items.map((item) => (
+                <div key={item.id} className="py-2 flex justify-between">
+                  <span>{item.quantity}x {item.name}</span>
+                  <span className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</span>
                 </div>
-                <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-
-          <Separator />
-
-          <div className="flex justify-between items-center text-lg font-bold">
-            <span>Total Paid</span>
-            <span className="text-primary">${currentOrder.total.toFixed(2)}</span>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
