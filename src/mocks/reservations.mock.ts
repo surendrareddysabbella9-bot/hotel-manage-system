@@ -1,0 +1,45 @@
+import type { Reservation } from "@/types";
+
+export const mockReservations: Reservation[] = [
+  {
+    id: "res-001",
+    customerId: "cust-001",
+    customerName: "Michael Torres",
+    partySize: 6,
+    date: "2026-07-25",
+    time: "19:30",
+    tableNumber: 4,
+    status: "confirmed",
+    specialRequests: "Anniversary celebration",
+  },
+  {
+    id: "res-002",
+    customerId: "cust-002",
+    customerName: "Lisa Anderson",
+    partySize: 4,
+    date: "2026-07-25",
+    time: "20:00",
+    tableNumber: 9,
+    status: "confirmed",
+  },
+  {
+    id: "res-003",
+    customerId: "user-002",
+    customerName: "Sarah Chen",
+    partySize: 2,
+    date: "2026-07-26",
+    time: "18:00",
+    status: "pending",
+    specialRequests: "Window seat preferred",
+  },
+  {
+    id: "res-004",
+    customerId: "cust-003",
+    customerName: "Robert Hughes",
+    partySize: 8,
+    date: "2026-07-25",
+    time: "18:30",
+    tableNumber: 6,
+    status: "seated",
+  },
+];
