@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { mockStaff } from "@/mocks";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useStaff } from "@/hooks/useStaff";
 import type { StaffMember } from "@/types";
 
 export function StaffManagementPage() {
-  const [staffList, setStaffList] = useState<StaffMember[]>(mockStaff);
+  const { staffList, isLoading, error, isEmpty, refetch, addStaffMember } = useStaff();
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
 
@@ -25,17 +28,16 @@ export function StaffManagementPage() {
     s.fullName.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddStaff = (e: React.FormEvent) => {
+  const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newMember: StaffMember = {
-      id: `staff-${Date.now()}`,
+    const newMember: Omit<StaffMember, "id"> = {
       fullName,
       email,
       role,
       status: "active",
       shift,
     };
-    setStaffList([...staffList, newMember]);
+    await addStaffMember(newMember);
     setIsAddOpen(false);
     setFullName("");
     setEmail("");
@@ -79,7 +81,15 @@ export function StaffManagementPage() {
         <Input placeholder="Search staff..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      <DataTable data={filtered} columns={columns} keyExtractor={(s) => s.id} />
+      {isLoading ? (
+        <LoadingSkeleton variant="table" count={5} />
+      ) : error ? (
+        <ErrorState title="Failed to load staff roster" message={error.message} onRetry={refetch} />
+      ) : isEmpty ? (
+        <EmptyState title="No staff members found" description="There are currently no staff profiles registered in the database." />
+      ) : (
+        <DataTable data={filtered} columns={columns} keyExtractor={(s) => s.id} />
+      )}
 
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
