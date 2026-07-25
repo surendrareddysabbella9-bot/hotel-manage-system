@@ -7,29 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-
-interface CustomerRecord {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  totalOrders: number;
-  totalSpent: number;
-  loyaltyTier: "Gold" | "Silver" | "Platinum";
-}
-
-const mockCustomersList: CustomerRecord[] = [
-  { id: "cust-001", name: "Sarah Chen", email: "sarah@example.com", phone: "+1 555-0192", totalOrders: 14, totalSpent: 642.50, loyaltyTier: "Gold" },
-  { id: "cust-002", name: "Michael Torres", email: "michael@example.com", phone: "+1 555-0184", totalOrders: 8, totalSpent: 380.00, loyaltyTier: "Silver" },
-  { id: "cust-003", name: "Lisa Anderson", email: "lisa@example.com", phone: "+1 555-0129", totalOrders: 22, totalSpent: 1250.00, loyaltyTier: "Platinum" },
-  { id: "cust-004", name: "James Wilson", email: "james@example.com", phone: "+1 555-0177", totalOrders: 5, totalSpent: 210.00, loyaltyTier: "Silver" },
-];
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useCustomers } from "@/hooks/useCustomers";
+import type { CustomerRecord } from "@/services/customerService";
 
 export function CustomersPage() {
+  const { customers, isLoading, error, isEmpty, refetch } = useCustomers();
   const [search, setSearch] = useState("");
   const [selectedCust, setSelectedCust] = useState<CustomerRecord | null>(null);
 
-  const filtered = mockCustomersList.filter((c) =>
+  const filtered = customers.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -37,7 +26,7 @@ export function CustomersPage() {
     { key: "name", header: "Customer Name" },
     { key: "email", header: "Email Address" },
     { key: "totalOrders", header: "Orders Placed" },
-    { key: "totalSpent", header: "Lifetime Spent", render: (c) => `$${c.totalSpent.toFixed(2)}` },
+    { key: "totalSpent", header: "Lifetime Spent", render: (c) => `₹${c.totalSpent.toFixed(2)}` },
     {
       key: "loyaltyTier",
       header: "Loyalty Tier",
@@ -48,7 +37,7 @@ export function CustomersPage() {
       ),
     },
     {
-      key: "actions",
+      key: "id",
       header: "Action",
       render: (c) => (
         <Button size="sm" variant="outline" onClick={() => setSelectedCust(c)}>
@@ -67,7 +56,15 @@ export function CustomersPage() {
         <Input placeholder="Search customers..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      <DataTable data={filtered} columns={columns} keyExtractor={(c) => c.id} />
+      {isLoading ? (
+        <LoadingSkeleton variant="table" count={5} />
+      ) : error ? (
+        <ErrorState title="Failed to load customer directory" message={error.message} onRetry={refetch} />
+      ) : isEmpty ? (
+        <EmptyState title="No customer profiles found" description="There are currently no customer profiles registered in Supabase." />
+      ) : (
+        <DataTable data={filtered} columns={columns} keyExtractor={(c) => c.id} />
+      )}
 
       <Dialog open={!!selectedCust} onOpenChange={(open) => !open && setSelectedCust(null)}>
         {selectedCust && (
@@ -80,7 +77,7 @@ export function CustomersPage() {
             <div className="space-y-3 py-3 text-sm">
               <p><span className="font-semibold">Phone:</span> {selectedCust.phone}</p>
               <p><span className="font-semibold">Total Orders:</span> {selectedCust.totalOrders}</p>
-              <p><span className="font-semibold">Lifetime Spent:</span> ${selectedCust.totalSpent.toFixed(2)}</p>
+              <p><span className="font-semibold">Lifetime Spent:</span> ₹{selectedCust.totalSpent.toFixed(2)}</p>
               <p><span className="font-semibold">Loyalty Status:</span> {selectedCust.loyaltyTier} Tier</p>
             </div>
           </DialogContent>
