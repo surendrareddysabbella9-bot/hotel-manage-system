@@ -9,35 +9,27 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { mockInventory } from "@/mocks";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useInventory } from "@/hooks/useInventory";
 import type { InventoryItem } from "@/types";
 
 export function InventoryPage() {
-  const [inventory, setInventory] = useState<InventoryItem[]>(mockInventory);
+  const { inventory, lowStockCount, isLoading, error, isEmpty, refetch, restockItem } = useInventory();
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [restockAmount, setRestockAmount] = useState("10");
-
-  const lowStockCount = inventory.filter((i) => i.status !== "in_stock").length;
 
   const filteredInventory = inventory.filter((i) =>
     i.name.toLowerCase().includes(search.toLowerCase()) || i.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleRestock = (e: React.FormEvent) => {
+  const handleRestock = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedItem) return;
     const addQty = parseFloat(restockAmount) || 0;
-    setInventory((prev) =>
-      prev.map((item) => {
-        if (item.id === selectedItem.id) {
-          const newQty = item.quantity + addQty;
-          const newStatus = newQty >= item.minThreshold ? "in_stock" : newQty > 0 ? "low_stock" : "out_of_stock";
-          return { ...item, quantity: newQty, status: newStatus, lastRestocked: new Date().toISOString() };
-        }
-        return item;
-      })
-    );
+    await restockItem(selectedItem.id, addQty);
     setSelectedItem(null);
   };
 
@@ -88,13 +80,23 @@ export function InventoryPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredInventory.map((item) => (
-          <InventoryCard key={item.id} item={item} />
-        ))}
-      </div>
+      {isLoading ? (
+        <LoadingSkeleton variant="card" count={6} />
+      ) : error ? (
+        <ErrorState title="Failed to load inventory" message={error.message} onRetry={refetch} />
+      ) : isEmpty ? (
+        <EmptyState title="No inventory items found" description="There are currently no raw ingredients in stock." />
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredInventory.map((item) => (
+              <InventoryCard key={item.id} item={item} />
+            ))}
+          </div>
 
-      <DataTable data={filteredInventory} columns={columns} keyExtractor={(i) => i.id} />
+          <DataTable data={filteredInventory} columns={columns} keyExtractor={(i) => i.id} />
+        </>
+      )}
 
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
         {selectedItem && (
