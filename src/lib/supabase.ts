@@ -14,3 +14,28 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export const isSupabaseConfigured = (): boolean => {
   return Boolean(supabaseUrl && supabaseAnonKey);
 };
+
+export const checkSupabaseHealth = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('roles')
+      .select('*')
+      .limit(1);
+
+    if (error) {
+      console.error('[Supabase Health Check] Query failed:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    console.log('[Supabase Health Check] Connected successfully. Fetched role row:', data);
+    return { success: true, data };
+  } catch (err) {
+    console.error('[Supabase Health Check] Connection error:', err);
+    return { success: false, error: err };
+  }
+};
+
+// Run health check automatically on browser load
+if (typeof window !== 'undefined') {
+  checkSupabaseHealth();
+}
