@@ -6,20 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TableCard } from "@/components/cards/TableCard";
-import { mockTables } from "@/mocks";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useTables } from "@/hooks/useTables";
 import type { RestaurantTable, TableStatus } from "@/types";
 
 export function TableManagementPage() {
-  const [tables, setTables] = useState<RestaurantTable[]>(mockTables);
+  const { tables, isLoading, updateTableStatus } = useTables();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null);
 
   const sections = Array.from(new Set(tables.map((t) => t.section)));
 
-  const updateTableStatus = (tableId: string, newStatus: TableStatus) => {
-    setTables((prev) =>
-      prev.map((t) => (t.id === tableId ? { ...t, status: newStatus } : t))
-    );
+  const handleStatusUpdate = async (tableId: string, newStatus: TableStatus) => {
+    await updateTableStatus(tableId, newStatus);
     if (selectedTable && selectedTable.id === tableId) {
       setSelectedTable({ ...selectedTable, status: newStatus });
     }
@@ -46,31 +46,40 @@ export function TableManagementPage() {
         ))}
       </div>
 
-      <div className="space-y-8">
-        {sections.map((sec) => {
-          const secTables = tables.filter(
-            (t) => t.section === sec && (statusFilter === "all" || t.status === statusFilter)
-          );
-          if (secTables.length === 0) return null;
+      {isLoading ? (
+        <LoadingSkeleton variant="table" count={6} />
+      ) : tables.length === 0 ? (
+        <EmptyState
+          title="No tables configured"
+          description="There are currently no restaurant tables found in the floor plan database."
+        />
+      ) : (
+        <div className="space-y-8">
+          {sections.map((sec) => {
+            const secTables = tables.filter(
+              (t) => t.section === sec && (statusFilter === "all" || t.status === statusFilter)
+            );
+            if (secTables.length === 0) return null;
 
-          return (
-            <div key={sec} className="space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-2">
-                <h3 className="font-semibold text-base flex items-center gap-2">
-                  <Grid3X3 className="size-4 text-primary" /> {sec}
-                </h3>
-                <Badge variant="outline">{secTables.length} Tables</Badge>
-              </div>
+            return (
+              <div key={sec} className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <h3 className="font-semibold text-base flex items-center gap-2">
+                    <Grid3X3 className="size-4 text-primary" /> {sec}
+                  </h3>
+                  <Badge variant="outline">{secTables.length} Tables</Badge>
+                </div>
 
-              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                {secTables.map((tbl) => (
-                  <TableCard key={tbl.id} table={tbl} onClick={(t) => setSelectedTable(t)} />
-                ))}
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                  {secTables.map((tbl) => (
+                    <TableCard key={tbl.id} table={tbl} onClick={(t) => setSelectedTable(t)} />
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <Dialog open={!!selectedTable} onOpenChange={(open) => !open && setSelectedTable(null)}>
         {selectedTable && (
@@ -91,7 +100,7 @@ export function TableManagementPage() {
                       key={st}
                       variant={selectedTable.status === st ? "default" : "outline"}
                       className="capitalize"
-                      onClick={() => updateTableStatus(selectedTable.id, st)}
+                      onClick={() => handleStatusUpdate(selectedTable.id, st)}
                     >
                       {st}
                     </Button>
