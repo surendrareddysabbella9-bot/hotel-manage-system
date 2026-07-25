@@ -7,11 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { mockOrders } from "@/mocks";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useOrders } from "@/hooks/useOrders";
 import type { Order } from "@/types";
 
 export function AdminOrdersPage() {
-  const [orders] = useState<Order[]>(mockOrders);
+  const { orders, isLoading, error, isEmpty, refetch } = useOrders();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -35,7 +38,7 @@ export function AdminOrdersPage() {
         </Badge>
       ),
     },
-    { key: "total", header: "Total", render: (o) => `$${o.total.toFixed(2)}` },
+    { key: "total", header: "Total", render: (o) => `₹${o.total.toFixed(2)}` },
     { key: "createdAt", header: "Time", render: (o) => new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
     {
       key: "actions",
@@ -73,7 +76,15 @@ export function AdminOrdersPage() {
         </div>
       </div>
 
-      <DataTable data={filteredOrders} columns={columns} keyExtractor={(o) => o.id} />
+      {isLoading ? (
+        <LoadingSkeleton variant="table" count={5} />
+      ) : error ? (
+        <ErrorState title="Failed to load orders" message={error.message} onRetry={refetch} />
+      ) : isEmpty ? (
+        <EmptyState title="No orders found" description="There are currently no orders in the database." />
+      ) : (
+        <DataTable data={filteredOrders} columns={columns} keyExtractor={(o) => o.id} />
+      )}
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         {selectedOrder && (
@@ -88,13 +99,13 @@ export function AdminOrdersPage() {
                 {selectedOrder.items.map((item) => (
                   <div key={item.id} className="py-2 flex justify-between">
                     <span>{item.quantity}x {item.name}</span>
-                    <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
               <div className="flex justify-between font-bold text-base pt-2">
                 <span>Total Paid</span>
-                <span className="text-primary">${selectedOrder.total.toFixed(2)}</span>
+                <span className="text-primary">₹{selectedOrder.total.toFixed(2)}</span>
               </div>
             </div>
           </DialogContent>
