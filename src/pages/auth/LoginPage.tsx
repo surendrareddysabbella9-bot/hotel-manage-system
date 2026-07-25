@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants";
 import type { UserRole } from "@/types";
 
+import { useAuth } from "@/app/providers/AuthContext";
+
 export function LoginPage() {
   const navigate = useNavigate();
+  const { loginWithRole } = useAuth();
   const [selectedRole, setSelectedRole] = useState<UserRole>("admin");
   const [email, setEmail] = useState("admin@restaurantos.app");
   const [password, setPassword] = useState("password123");
@@ -28,8 +31,9 @@ export function LoginPage() {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    await loginWithRole(selectedRole);
     if (selectedRole === "admin") {
       navigate(ROUTES.admin.dashboard);
     } else if (selectedRole === "staff") {
