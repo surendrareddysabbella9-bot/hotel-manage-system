@@ -8,19 +8,22 @@ import { Badge } from "@/components/ui/badge";
 import { FoodCard } from "@/components/cards/FoodCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ROUTES } from "@/constants";
-import { mockMenuCategories, mockMenuItems } from "@/mocks";
+import { useMenu } from "@/hooks/useMenu";
 import type { MenuItem } from "@/types";
 
 export function DigitalMenuPage() {
+  const { categories, items, isLoading } = useMenu();
+
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [cartItems, setCartItems] = useState<{ item: MenuItem; count: number }[]>([]);
 
-  const tags = ["all", "signature", "vegetarian", "seafood", "gluten-free", "cocktail"];
+  const tags = ["all", "signature", "vegetarian", "seafood", "gluten-free", "bestseller", "spicy"];
 
-  const filteredItems = mockMenuItems.filter((item) => {
+  const filteredItems = items.filter((item) => {
     const matchesCategory = selectedCategory === "all" || item.categoryId === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -70,7 +73,7 @@ export function DigitalMenuPage() {
           >
             All Items
           </Button>
-          {mockMenuCategories.map((cat) => (
+          {categories.map((cat) => (
             <Button
               key={cat.id}
               size="sm"
@@ -101,7 +104,9 @@ export function DigitalMenuPage() {
       </div>
 
       {/* Food Items Grid */}
-      {filteredItems.length > 0 ? (
+      {isLoading ? (
+        <LoadingSkeleton variant="card" count={6} />
+      ) : filteredItems.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredItems.map((item) => (
             <FoodCard key={item.id} item={item} onAddToCart={handleAddToCart} />
@@ -126,7 +131,7 @@ export function DigitalMenuPage() {
             </div>
             <div>
               <p className="text-xs font-semibold">{totalCartCount} items selected</p>
-              <p className="text-xs opacity-90">${totalCartPrice.toFixed(2)}</p>
+              <p className="text-xs opacity-90">₹{totalCartPrice.toFixed(2)}</p>
             </div>
           </div>
 

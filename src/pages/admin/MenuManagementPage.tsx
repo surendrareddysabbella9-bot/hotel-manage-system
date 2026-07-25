@@ -7,11 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { mockMenuCategories, mockMenuItems } from "@/mocks";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useMenu } from "@/hooks/useMenu";
 import type { MenuItem } from "@/types";
 
 export function MenuManagementPage() {
-  const [items, setItems] = useState<MenuItem[]>(mockMenuItems);
+  const { categories, items, isLoading, toggleAvailability, addMenuItem } = useMenu();
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -19,7 +22,7 @@ export function MenuManagementPage() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [prepTime, setPrepTime] = useState("");
-  const [category, setCategory] = useState("cat-001");
+  const [category, setCategory] = useState(categories[0]?.id || "cat-001");
   const [description, setDescription] = useState("");
 
   const filteredItems = items.filter((i) => {
@@ -28,27 +31,20 @@ export function MenuManagementPage() {
     return matchesCat && matchesSearch;
   });
 
-  const toggleAvailability = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, available: !item.available } : item))
-    );
-  };
-
-  const handleAddItem = (e: React.FormEvent) => {
+  const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newItem: MenuItem = {
-      id: `item-${Date.now()}`,
-      categoryId: category,
+    const newItem: Omit<MenuItem, "id"> = {
+      categoryId: category || categories[0]?.id || "cat-001",
       name,
       description,
-      price: parseFloat(price) || 15.0,
+      price: parseFloat(price) || 250.0,
       imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
       preparationTime: parseInt(prepTime, 10) || 15,
       available: true,
       tags: ["new"],
     };
 
-    setItems([newItem, ...items]);
+    await addMenuItem(newItem);
     setIsAddModalOpen(false);
     setName("");
     setPrice("");
@@ -75,7 +71,7 @@ export function MenuManagementPage() {
           <Button size="sm" variant={selectedCategory === "all" ? "default" : "outline"} onClick={() => setSelectedCategory("all")}>
             All
           </Button>
-          {mockMenuCategories.map((c) => (
+          {categories.map((c) => (
             <Button key={c.id} size="sm" variant={selectedCategory === c.id ? "default" : "outline"} onClick={() => setSelectedCategory(c.id)}>
               {c.name}
             </Button>
@@ -83,31 +79,40 @@ export function MenuManagementPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="rounded-xl border border-border bg-card p-4 space-y-3 flex flex-col justify-between">
-            <div className="flex gap-3">
-              <img src={item.imageUrl} alt={item.name} className="size-16 rounded-lg object-cover shrink-0" />
-              <div className="space-y-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-semibold text-sm">{item.name}</h4>
-                  <span className="font-bold text-primary text-sm">${item.price.toFixed(2)}</span>
+      {isLoading ? (
+        <LoadingSkeleton variant="card" count={6} />
+      ) : filteredItems.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredItems.map((item) => (
+            <div key={item.id} className="rounded-xl border border-border bg-card p-4 space-y-3 flex flex-col justify-between">
+              <div className="flex gap-3">
+                <img src={item.imageUrl} alt={item.name} className="size-16 rounded-lg object-cover shrink-0" />
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-semibold text-sm">{item.name}</h4>
+                    <span className="font-bold text-primary text-sm">₹{item.price.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-border/50 pt-3 text-xs">
+                <Badge variant={item.available ? "success" : "destructive"}>
+                  {item.available ? "Available" : "Sold Out"}
+                </Badge>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => toggleAvailability(item.id)}>
+                  Toggle Availability
+                </Button>
               </div>
             </div>
-
-            <div className="flex items-center justify-between border-t border-border/50 pt-3 text-xs">
-              <Badge variant={item.available ? "success" : "destructive"}>
-                {item.available ? "Available" : "Sold Out"}
-              </Badge>
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => toggleAvailability(item.id)}>
-                Toggle Availability
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No menu items found"
+          description="Try adjusting your category selection or search term."
+        />
+      )}
 
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-md">
@@ -119,13 +124,13 @@ export function MenuManagementPage() {
           <form onSubmit={handleAddItem} className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="name">Dish Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Lobster Thermidor" />
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Butter Chicken Special" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
-                <Input id="price" type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} required placeholder="24.50" />
+                <Label htmlFor="price">Price (₹)</Label>
+                <Input id="price" type="number" step="1" value={price} onChange={(e) => setPrice(e.target.value)} required placeholder="350" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="prepTime">Prep Time (min)</Label>
@@ -141,7 +146,7 @@ export function MenuManagementPage() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus:ring-1 focus:ring-ring"
               >
-                {mockMenuCategories.map((c) => (
+                {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
