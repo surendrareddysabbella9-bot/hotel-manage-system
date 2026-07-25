@@ -8,12 +8,15 @@ import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { ROUTES } from "@/constants";
-import { mockDashboardStats, mockOrders, mockInventory } from "@/mocks";
+import { useDashboard } from "@/hooks/useDashboard";
 import type { Order } from "@/types";
 
 export function AdminDashboardPage() {
-  const lowStockItems = mockInventory.filter((i) => i.status !== "in_stock");
+  const { data, isLoading, error, isEmpty, refetch } = useDashboard();
 
   const columns: DataTableColumn<Order>[] = [
     { key: "orderNumber", header: "Order #", render: (o) => `#${o.orderNumber}` },
@@ -28,8 +31,55 @@ export function AdminDashboardPage() {
         </Badge>
       ),
     },
-    { key: "total", header: "Total", render: (o) => `$${o.total.toFixed(2)}` },
+    { key: "total", header: "Total", render: (o) => `₹${o.total.toFixed(2)}` },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <PageHeader
+          title="Executive Overview"
+          description="Real-time operational summary and key restaurant metrics"
+        />
+        <LoadingSkeleton variant="page" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <PageHeader
+          title="Executive Overview"
+          description="Real-time operational summary and key restaurant metrics"
+        />
+        <ErrorState
+          title="Failed to load dashboard data"
+          message={error.message}
+          onRetry={refetch}
+        />
+      </div>
+    );
+  }
+
+  if (isEmpty || !data) {
+    return (
+      <div className="space-y-8">
+        <PageHeader
+          title="Executive Overview"
+          description="Real-time operational summary and key restaurant metrics"
+        />
+        <EmptyState
+          title="No dashboard data found"
+          description="There is currently no metric data available from Supabase."
+          actionLabel="Refresh Data"
+          onAction={refetch}
+        />
+      </div>
+    );
+  }
+
+  const { stats, lowStockItems, recentOrders } = data;
 
   return (
     <div className="space-y-8">
@@ -38,8 +88,8 @@ export function AdminDashboardPage() {
         description="Real-time operational summary and key restaurant metrics"
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {mockDashboardStats.map((stat) => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {stats.map((stat) => (
           <StatisticsCard
             key={stat.id}
             id={stat.id}
@@ -71,17 +121,21 @@ export function AdminDashboardPage() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {lowStockItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 text-xs">
-                <div>
-                  <p className="font-semibold">{item.name}</p>
-                  <p className="text-muted-foreground">{item.quantity} {item.unit} remaining (Min: {item.minThreshold})</p>
+            {lowStockItems.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-4 text-center">All inventory items are fully stocked.</p>
+            ) : (
+              lowStockItems.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 text-xs">
+                  <div>
+                    <p className="font-semibold">{item.name}</p>
+                    <p className="text-muted-foreground">{item.quantity} {item.unit} remaining (Min: {item.minThreshold})</p>
+                  </div>
+                  <Badge variant={item.status === "out_of_stock" ? "destructive" : "warning"}>
+                    {item.status === "out_of_stock" ? "Out" : "Low"}
+                  </Badge>
                 </div>
-                <Badge variant={item.status === "out_of_stock" ? "destructive" : "warning"}>
-                  {item.status === "out_of_stock" ? "Out" : "Low"}
-                </Badge>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
@@ -95,7 +149,7 @@ export function AdminDashboardPage() {
             </Link>
           </Button>
         </div>
-        <DataTable data={mockOrders} columns={columns} keyExtractor={(o) => o.id} />
+        <DataTable data={recentOrders} columns={columns} keyExtractor={(o) => o.id} />
       </div>
     </div>
   );
