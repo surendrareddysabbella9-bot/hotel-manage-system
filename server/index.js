@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import apiRoutes from './routes/api.js';
+import { initDB } from './init_db.js';
 
 dotenv.config();
 
@@ -26,6 +27,16 @@ app.use('/api', apiRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'RestaurantOS Backend is running' });
+});
+
+// Setup database endpoint
+app.get('/api/setup-database', async (req, res) => {
+  try {
+    await initDB();
+    res.json({ status: 'ok', message: 'Database schema and seeds initialized successfully!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Serve static frontend in production

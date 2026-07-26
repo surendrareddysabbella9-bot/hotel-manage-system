@@ -52,11 +52,10 @@ async function initDB() {
     console.log('Seed data inserted successfully.');
 
     console.log('Database initialization complete!');
-    process.exit(0);
   } catch (error) {
     console.error('Error during database initialization:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-initDB();
+export { initDB };
