@@ -13,21 +13,13 @@ import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ROUTES, RESTAURANT_TAX_RATE } from "@/constants";
 import { useTables } from "@/hooks/useTables";
 import { AIRecommendations } from "@/components/customer/AIRecommendations";
-
-interface CartItem {
-  id: string;
-  menuItemId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  imageUrl: string;
-}
+import { useCart } from "@/hooks/useCart";
 
 export function CartPage() {
   const navigate = useNavigate();
   const { tables, isLoading } = useTables();
+  const { cart, updateQuantity, removeItem, addToCart, clearCart } = useCart();
 
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [selectedTableId, setSelectedTableId] = useState<string>("");
@@ -36,31 +28,13 @@ export function CartPage() {
 
   const availableTables = tables.filter((t) => t.status === "available");
 
-  const updateQuantity = (id: string, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === id) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean) as CartItem[]
-    );
-  };
-
-  const removeItem = (id: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
-
   const handleAddRecommendation = (item: any) => {
-    setCart((prev) => {
-      const existing = prev.find(p => p.id === item.id);
-      if (existing) {
-        return prev.map(p => p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p);
-      }
-      return [...prev, { ...item, quantity: 1 }];
+    addToCart({
+      id: item.id,
+      menuItemId: item.menuItemId,
+      name: item.name,
+      price: item.price,
+      imageUrl: item.imageUrl,
     });
   };
 
@@ -80,7 +54,9 @@ export function CartPage() {
 
   const handleCheckout = async () => {
     setIsSubmitting(true);
+    // In a real app, call checkout API here to create the order
     setTimeout(() => {
+      clearCart();
       setIsSubmitting(false);
       navigate(ROUTES.customer.tracking);
     }, 500);

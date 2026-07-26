@@ -11,15 +11,16 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ROUTES } from "@/constants";
 import { useMenu } from "@/hooks/useMenu";
+import { useCart } from "@/hooks/useCart";
 import type { MenuItem } from "@/types";
 
 export function DigitalMenuPage() {
   const { categories, items, isLoading } = useMenu();
 
+  const { cart, addToCart } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("all");
-  const [cartItems, setCartItems] = useState<{ item: MenuItem; count: number }[]>([]);
 
   const tags = ["all", "signature", "vegetarian", "seafood", "gluten-free", "bestseller", "spicy"];
 
@@ -32,17 +33,17 @@ export function DigitalMenuPage() {
   });
 
   const handleAddToCart = (item: MenuItem) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.item.id === item.id);
-      if (existing) {
-        return prev.map((i) => (i.item.id === item.id ? { ...i, count: i.count + 1 } : i));
-      }
-      return [...prev, { item, count: 1 }];
+    addToCart({
+      id: item.id,
+      menuItemId: item.id,
+      name: item.name,
+      price: item.price,
+      imageUrl: item.imageUrl || ""
     });
   };
 
-  const totalCartCount = cartItems.reduce((acc, curr) => acc + curr.count, 0);
-  const totalCartPrice = cartItems.reduce((acc, curr) => acc + curr.item.price * curr.count, 0);
+  const totalCartCount = cart.reduce((acc, curr) => acc + curr.quantity, 0);
+  const totalCartPrice = cart.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
 
   return (
     <div className="space-y-6 pb-20">
