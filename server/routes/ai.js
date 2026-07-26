@@ -22,7 +22,7 @@ router.post('/recommend', async (req, res) => {
     const menuRes = await pool.query(`SELECT id, name, category_id, price FROM menu_items WHERE available = true`);
     const menuItems = menuRes.rows;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
       You are a smart restaurant recommendation engine.
@@ -76,7 +76,7 @@ router.get('/analytics', async (req, res) => {
       FROM inventory
     `);
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
       You are an expert restaurant operations manager.
@@ -122,7 +122,7 @@ router.post('/chat-order', async (req, res) => {
     const menuRes = await pool.query(`SELECT id, name, price, image_url FROM menu_items WHERE available = true`);
     const menuItems = menuRes.rows;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
       You are a friendly, helpful, and agentic restaurant ordering assistant.
