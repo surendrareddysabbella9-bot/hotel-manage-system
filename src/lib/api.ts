@@ -3,6 +3,14 @@ const getBaseUrl = () => {
   return import.meta.env.VITE_API_URL || '/api';
 };
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token');
   
@@ -19,7 +27,7 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    throw new ApiError(errorData.error || `Request failed with status ${response.status}`, response.status);
   }
 
   return response.json();

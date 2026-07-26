@@ -1,10 +1,12 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import { pool } from '../db.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-dev';
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
@@ -133,6 +135,81 @@ router.get('/me', (req, res) => {
       }
     });
   });
+});
+
+// GET /api/auth/config/google
+router.get('/config/google', (req, res) => {
+  res.json({ client_id: process.env.GOOGLE_CLIENT_ID || '' });
+});
+
+// POST /api/auth/google
+router.post('/google', async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token is required' });
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) return res.status(500).json({ error: 'Google Client ID not configured on server' });
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: clientId,
+    });
+    
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const fullName = [payload.given_name, payload.family_name].filter(Boolean).join(' ').trim() || email.split('@')[0];
+
+    // Get or create user
+    let userRes = await pool.query('SELECT * FROM profiles WHERE email = $1', [email]);
+    let user;
+
+    if (userRes.rows.length === 0) {
+      // Create user
+      const passwordHash = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+      let roleRes = await pool.query("SELECT id FROM roles WHERE name ILIKE 'Customer'");
+      if (roleRes.rows.length === 0) {
+        return res.status(500).json({ error: 'Database roles not initialized' });
+      }
+      const roleId = roleRes.rows[0].id;
+      
+      const insertRes = await pool.query(
+        `INSERT INTO profiles (role_id, email, full_name, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, full_name, created_at`,
+        [roleId, email, fullName, passwordHash]
+      );
+      user = insertRes.rows[0];
+      user.role_name = 'Customer';
+    } else {
+      user = userRes.rows[0];
+      const roleRes = await pool.query('SELECT name FROM roles WHERE id = $1', [user.role_id]);
+      user.role_name = roleRes.rows[0].name;
+    }
+
+    const rawRole = (user.role_name || '').toLowerCase();
+    const roleVal = (rawRole === 'admin' || rawRole === 'manager') ? 'admin' : (rawRole === 'customer' ? 'customer' : 'staff');
+
+    const jwtToken = jwt.sign({ 
+      id: user.id, 
+      email: user.email, 
+      role: roleVal, 
+      fullName: user.full_name, 
+      createdAt: user.created_at 
+    }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        role: roleVal,
+        createdAt: user.created_at
+      },
+      token: jwtToken
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(400).json({ error: 'Invalid Google ID Token' });
+  }
 });
 
 export default router;

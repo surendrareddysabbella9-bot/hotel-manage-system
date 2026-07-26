@@ -2,16 +2,33 @@ import type { User, UserRole } from '@/types';
 import { apiFetch } from '@/lib/api';
 
 export const authService = {
-  // Returns the currently authenticated user's profile, or null if not logged in.
   async getCurrentProfile(): Promise<User | null> {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-      
       const response = await apiFetch('/auth/me');
       return response.user;
-    } catch {
-      return null;
+    } catch (err: any) {
+      if (err.status === 401 || err.status === 403) {
+        localStorage.removeItem('token');
+        return null;
+      }
+      
+      // If it's a network error (no status) or 500, try to decode the token to preserve session
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return {
+          id: payload.id,
+          email: payload.email,
+          fullName: payload.fullName,
+          role: payload.role,
+          createdAt: payload.createdAt
+        };
+      } catch (e) {
+        localStorage.removeItem('token');
+        return null;
+      }
     }
   },
 
