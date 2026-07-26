@@ -40,6 +40,13 @@ export const orderService = {
     });
   },
 
+  async createOrder(orderData: any): Promise<any> {
+    return apiFetch('/orders/create-full', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+  },
+
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<boolean> {
     try {
       await apiFetch(`/orders/${orderId}`, {

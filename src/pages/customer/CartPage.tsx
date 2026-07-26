@@ -14,6 +14,7 @@ import { ROUTES, RESTAURANT_TAX_RATE } from "@/constants";
 import { useTables } from "@/hooks/useTables";
 import { AIRecommendations } from "@/components/customer/AIRecommendations";
 import { useCart } from "@/hooks/useCart";
+import { orderService } from "@/services/orderService";
 
 export function CartPage() {
   const navigate = useNavigate();
@@ -54,12 +55,33 @@ export function CartPage() {
 
   const handleCheckout = async () => {
     setIsSubmitting(true);
-    // In a real app, call checkout API here to create the order
-    setTimeout(() => {
+    try {
+      const orderPayload = {
+        order_number: "ORD-" + Math.floor(1000 + Math.random() * 9000),
+        customer_name: "Guest Diner",
+        table_id: orderType === 'dine_in' ? selectedTableId : null,
+        order_type: orderType,
+        subtotal,
+        tax,
+        total,
+        items: cart.map(item => ({
+          menu_item_id: item.menuItemId,
+          name: item.name,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.price * item.quantity,
+          notes: ""
+        }))
+      };
+
+      await orderService.createOrder(orderPayload);
       clearCart();
-      setIsSubmitting(false);
       navigate(ROUTES.customer.tracking);
-    }, 500);
+    } catch (err) {
+      console.error("Failed to checkout", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

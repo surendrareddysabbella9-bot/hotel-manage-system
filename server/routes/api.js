@@ -73,6 +73,36 @@ router.get('/:table/:id', async (req, res) => {
   }
 });
 
+// Custom POST for full order (with items)
+router.post('/orders/create-full', async (req, res) => {
+  try {
+    const { order_number, customer_name, table_id, order_type, subtotal, tax, total, items } = req.body;
+    
+    const orderRes = await pool.query(
+      `INSERT INTO orders (order_number, customer_name, table_id, order_type, status, subtotal, tax, total) 
+       VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7) RETURNING *`,
+      [order_number, customer_name, table_id, order_type, subtotal, tax, total]
+    );
+    const newOrder = orderRes.rows[0];
+
+    for (const item of items) {
+      await pool.query(
+        `INSERT INTO order_items (order_id, menu_item_id, name, quantity, unit_price, total_price, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [newOrder.id, item.menu_item_id, item.name, item.quantity, item.unit_price, item.total_price, item.notes || '']
+      );
+    }
+
+    if (req.io) {
+      req.io.emit('orders_created', newOrder);
+    }
+
+    res.status(201).json(newOrder);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Generic POST (Insert)
 router.post('/:table', async (req, res) => {
   const { table } = req.params;
