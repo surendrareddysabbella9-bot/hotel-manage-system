@@ -48,7 +48,9 @@ router.post('/recommend', async (req, res) => {
     const recommendedIds = JSON.parse(jsonMatch[0]);
     
     // Fetch full details of recommended items
-    const recommendations = menuItems.filter(item => recommendedIds.includes(item.id));
+    const recommendations = menuItems
+      .filter(item => recommendedIds.includes(item.id))
+      .map(item => ({ ...item, price: Number(item.price) }));
     
     res.json({ recommendations });
   } catch (error) {
@@ -162,7 +164,7 @@ router.post('/chat-order', async (req, res) => {
           id: menuDetails.id,
           menuItemId: menuDetails.id,
           name: menuDetails.name,
-          price: menuDetails.price,
+          price: Number(menuDetails.price),
           imageUrl: menuDetails.image_url,
           quantity: item.quantity
         };
