@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+
 import { reservationService } from '@/services/reservationService';
 import type { Reservation } from '@/types';
 
@@ -31,7 +31,7 @@ export function useReservations() {
     });
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [fetchReservations]);
 

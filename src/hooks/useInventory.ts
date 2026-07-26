@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+
 import { inventoryService } from '@/services/inventoryService';
 import type { InventoryItem, InventoryStatus } from '@/types';
 
@@ -31,7 +31,7 @@ export function useInventory() {
     });
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [fetchInventory]);
 

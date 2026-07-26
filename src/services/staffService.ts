@@ -1,24 +1,20 @@
-import { supabase } from '@/lib/supabase';
 import type { StaffMember } from '@/types';
+import { apiFetch } from '@/lib/api';
 
 export const staffService = {
   async getStaffMembers(): Promise<StaffMember[]> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*, roles!inner(name)')
-      .order('created_at', { ascending: false });
+    const profilesData = await apiFetch('/profiles?order=created_at.desc');
+    const rolesData = await apiFetch('/roles');
 
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to fetch staff members');
-    }
-
-    return data
-      .filter((p) => {
-        const rName = (p.roles?.name || '').toString().toLowerCase();
-        return rName !== 'customer';
+    return profilesData
+      .filter((p: any) => {
+        const roleRecord = rolesData.find((r: any) => r.id === p.role_id);
+        const rName = (roleRecord?.name || '').toString().toLowerCase();
+        return rName !== 'customer' && rName !== '';
       })
-      .map((p) => {
-        const rawRoleName = (p.roles?.name || '').toString().toLowerCase();
+      .map((p: any) => {
+        const roleRecord = rolesData.find((r: any) => r.id === p.role_id);
+        const rawRoleName = (roleRecord?.name || '').toString().toLowerCase();
         const roleVal: StaffMember['role'] =
           rawRoleName === 'chef'
             ? 'chef'
@@ -41,31 +37,23 @@ export const staffService = {
   },
 
   async addStaffMember(newStaff: Omit<StaffMember, 'id'>): Promise<StaffMember> {
-    const { data: roleData } = await supabase
-      .from('roles')
-      .select('id')
-      .ilike('name', newStaff.role)
-      .maybeSingle();
+    const rolesData = await apiFetch('/roles');
+    const roleRecord = rolesData.find((r: any) => r.name.toLowerCase() === newStaff.role.toLowerCase());
 
-    const roleId = roleData?.id;
+    const roleId = roleRecord?.id;
 
     if (!roleId) {
       throw new Error(`Role '${newStaff.role}' not found in database roles table.`);
     }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert({
+    const data = await apiFetch('/profiles', {
+      method: 'POST',
+      body: JSON.stringify({
         role_id: roleId,
         email: newStaff.email,
         full_name: newStaff.fullName,
       })
-      .select()
-      .single();
-
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to register staff profile in Supabase');
-    }
+    });
 
     return {
       id: data.id,

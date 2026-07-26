@@ -1,18 +1,11 @@
-import { supabase } from '@/lib/supabase';
 import type { Reservation, ReservationStatus } from '@/types';
+import { apiFetch } from '@/lib/api';
 
 export const reservationService = {
   async getReservations(): Promise<Reservation[]> {
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('*')
-      .order('reservation_date', { ascending: true });
+    const data = await apiFetch('/reservations?order=reservation_date.asc');
 
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to fetch reservations');
-    }
-
-    return data.map((r) => ({
+    return data.map((r: any) => ({
       id: r.id,
       customerId: r.customer_id || '',
       customerName: r.customer_name,
@@ -26,9 +19,9 @@ export const reservationService = {
   },
 
   async createReservation(reservation: Omit<Reservation, 'id'>): Promise<Reservation> {
-    const { data, error } = await supabase
-      .from('reservations')
-      .insert({
+    const data = await apiFetch('/reservations', {
+      method: 'POST',
+      body: JSON.stringify({
         customer_id: reservation.customerId || null,
         customer_name: reservation.customerName,
         party_size: reservation.partySize,
@@ -37,12 +30,7 @@ export const reservationService = {
         special_requests: reservation.specialRequests,
         status: reservation.status || 'confirmed',
       })
-      .select()
-      .single();
-
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to create reservation');
-    }
+    });
 
     return {
       id: data.id,
@@ -57,41 +45,35 @@ export const reservationService = {
   },
 
   subscribeToReservations(onUpdate: (reservation: Reservation) => void) {
-    const channelId = `reservations_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const channel = supabase.channel(channelId);
+    let isPolling = true;
+    let lastKnownReservations: Record<string, string> = {};
 
-    channel.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'reservations' },
-      (payload) => {
-        if (payload.new) {
-          const raw = payload.new as {
-            id: string;
-            customer_id?: string;
-            customer_name: string;
-            party_size: number;
-            reservation_date: string;
-            reservation_time: string;
-            table_number?: number;
-            status: string;
-            special_requests?: string;
-          };
-          onUpdate({
-            id: raw.id,
-            customerId: raw.customer_id || '',
-            customerName: raw.customer_name,
-            partySize: raw.party_size,
-            date: raw.reservation_date,
-            time: raw.reservation_time,
-            tableNumber: raw.table_number || undefined,
-            status: raw.status as ReservationStatus,
-            specialRequests: raw.special_requests || undefined,
-          });
+    const poll = async () => {
+      if (!isPolling) return;
+      try {
+        const currentReservations = await this.getReservations();
+        
+        for (const res of currentReservations) {
+          if (lastKnownReservations[res.id] !== res.status) {
+            onUpdate(res);
+          }
+          lastKnownReservations[res.id] = res.status;
         }
+      } catch (err) {
+        console.error('Polling error', err);
       }
-    );
+      
+      if (isPolling) {
+        setTimeout(poll, 5000);
+      }
+    };
 
-    channel.subscribe();
-    return channel;
+    poll();
+
+    return {
+      unsubscribe: () => {
+        isPolling = false;
+      }
+    };
   },
 };

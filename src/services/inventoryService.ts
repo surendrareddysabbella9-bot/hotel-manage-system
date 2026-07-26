@@ -1,18 +1,11 @@
-import { supabase } from '@/lib/supabase';
 import type { InventoryItem, InventoryStatus } from '@/types';
+import { apiFetch } from '@/lib/api';
 
 export const inventoryService = {
   async getInventory(): Promise<InventoryItem[]> {
-    const { data, error } = await supabase
-      .from('inventory')
-      .select('*')
-      .order('name', { ascending: true });
+    const data = await apiFetch('/inventory?order=name.asc');
 
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to fetch inventory items');
-    }
-
-    return data.map((item) => ({
+    return data.map((item: any) => ({
       id: item.id,
       name: item.name,
       category: item.category,
@@ -35,65 +28,66 @@ export const inventoryService = {
 
     const now = new Date().toISOString();
 
-    const { error: updateError } = await supabase
-      .from('inventory')
-      .update({
-        quantity: newQuantity,
-        status: newStatus,
-        last_restocked: now,
-        updated_at: now,
-      })
-      .eq('id', id);
+    try {
+      await apiFetch(`/inventory/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          quantity: newQuantity,
+          status: newStatus,
+          last_restocked: now,
+          updated_at: now,
+        })
+      });
 
-    if (updateError) return false;
+      // Log restock in inventory_logs table
+      await apiFetch('/inventory_logs', {
+        method: 'POST',
+        body: JSON.stringify({
+          inventory_id: id,
+          change_type: 'restock',
+          quantity_changed: addedQuantity,
+          previous_quantity: currentItem.quantity,
+          new_quantity: newQuantity,
+          notes: `Restocked ${addedQuantity} ${currentItem.unit}`,
+        })
+      });
 
-    // Log restock in inventory_logs table
-    await supabase.from('inventory_logs').insert({
-      inventory_id: id,
-      change_type: 'restock',
-      quantity_changed: addedQuantity,
-      previous_quantity: currentItem.quantity,
-      new_quantity: newQuantity,
-      notes: `Restocked ${addedQuantity} ${currentItem.unit}`,
-    });
-
-    return true;
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   subscribeToInventory(onUpdate: (item: InventoryItem) => void) {
-    const channelId = `inventory_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const channel = supabase.channel(channelId);
+    let isPolling = true;
+    let lastKnownQuantities: Record<string, number> = {};
 
-    channel.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'inventory' },
-      (payload) => {
-        if (payload.new) {
-          const raw = payload.new as {
-            id: string;
-            name: string;
-            category: string;
-            quantity: number;
-            unit: string;
-            min_threshold: number;
-            status: string;
-            last_restocked: string;
-          };
-          onUpdate({
-            id: raw.id,
-            name: raw.name,
-            category: raw.category,
-            quantity: Number(raw.quantity),
-            unit: raw.unit,
-            minThreshold: Number(raw.min_threshold),
-            status: raw.status as InventoryStatus,
-            lastRestocked: raw.last_restocked,
-          });
+    const poll = async () => {
+      if (!isPolling) return;
+      try {
+        const currentInventory = await this.getInventory();
+        
+        for (const item of currentInventory) {
+          if (lastKnownQuantities[item.id] !== item.quantity) {
+            onUpdate(item);
+          }
+          lastKnownQuantities[item.id] = item.quantity;
         }
+      } catch (err) {
+        console.error('Polling error', err);
       }
-    );
+      
+      if (isPolling) {
+        setTimeout(poll, 5000);
+      }
+    };
 
-    channel.subscribe();
-    return channel;
+    poll();
+
+    return {
+      unsubscribe: () => {
+        isPolling = false;
+      }
+    };
   },
 };

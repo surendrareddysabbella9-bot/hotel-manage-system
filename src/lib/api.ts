@@ -1,6 +1,6 @@
 const getBaseUrl = () => {
-  // If Vite injects the API URL, use it, otherwise assume same origin
-  return import.meta.env.VITE_API_URL || '';
+  // If Vite injects the API URL, use it, otherwise assume same origin /api
+  return import.meta.env.VITE_API_URL || '/api';
 };
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {

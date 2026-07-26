@@ -1,18 +1,11 @@
-import { supabase } from '@/lib/supabase';
 import type { RestaurantTable, TableStatus } from '@/types';
+import { apiFetch } from '@/lib/api';
 
 export const tableService = {
   async getTables(): Promise<RestaurantTable[]> {
-    const { data, error } = await supabase
-      .from('restaurant_tables')
-      .select('*')
-      .order('number', { ascending: true });
+    const data = await apiFetch('/restaurant_tables?order=number.asc');
 
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to fetch restaurant tables');
-    }
-
-    return data.map((t) => ({
+    return data.map((t: any) => ({
       id: t.id,
       number: t.number,
       capacity: t.capacity,
@@ -22,42 +15,47 @@ export const tableService = {
   },
 
   async updateTableStatus(tableId: string, status: TableStatus): Promise<boolean> {
-    const { error } = await supabase
-      .from('restaurant_tables')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', tableId);
-
-    return !error;
+    try {
+      await apiFetch(`/restaurant_tables/${tableId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, updated_at: new Date().toISOString() })
+      });
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   subscribeToTables(onUpdate: (table: RestaurantTable) => void) {
-    const channelId = `tables_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const channel = supabase.channel(channelId);
+    let isPolling = true;
+    let lastKnownStatuses: Record<string, string> = {};
 
-    channel.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'restaurant_tables' },
-      (payload) => {
-        if (payload.new) {
-          const raw = payload.new as {
-            id: string;
-            number: number;
-            capacity: number;
-            status: string;
-            section: string;
-          };
-          onUpdate({
-            id: raw.id,
-            number: raw.number,
-            capacity: raw.capacity,
-            status: raw.status as TableStatus,
-            section: raw.section,
-          });
+    const poll = async () => {
+      if (!isPolling) return;
+      try {
+        const currentTables = await this.getTables();
+        
+        for (const table of currentTables) {
+          if (lastKnownStatuses[table.id] !== table.status) {
+            onUpdate(table);
+          }
+          lastKnownStatuses[table.id] = table.status;
         }
+      } catch (err) {
+        console.error('Polling error', err);
       }
-    );
+      
+      if (isPolling) {
+        setTimeout(poll, 5000);
+      }
+    };
 
-    channel.subscribe();
-    return channel;
+    poll();
+
+    return {
+      unsubscribe: () => {
+        isPolling = false;
+      }
+    };
   },
 };

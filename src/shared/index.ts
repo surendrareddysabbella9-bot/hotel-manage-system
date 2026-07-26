@@ -41,5 +41,4 @@ export * from '@/services';
 
 // Shared Utilities & Constants
 export * from '@/lib/utils';
-export * from '@/lib/supabase';
 export * from '@/constants';

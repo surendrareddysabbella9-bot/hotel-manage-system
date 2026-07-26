@@ -48,7 +48,7 @@ export function AnalyticsPage() {
         />
         <EmptyState
           title="No analytics data available"
-          description="There is currently no transaction data available in Supabase to calculate business metrics."
+          description="There is currently no transaction data available in the database to calculate business metrics."
         />
       </div>
     );

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+
 import { tableService } from '@/services/tableService';
 import type { RestaurantTable, TableStatus } from '@/types';
 
@@ -31,7 +31,7 @@ export function useTables() {
     });
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [fetchTables]);
 

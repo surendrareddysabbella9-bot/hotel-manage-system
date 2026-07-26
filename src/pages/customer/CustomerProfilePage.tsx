@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { useAuth } from "@/app/providers/AuthContext";
 import { useOrders } from "@/hooks/useOrders";
-import { supabase } from "@/lib/supabase";
+import { apiFetch } from "@/lib/api";
 
 export function CustomerProfilePage() {
   const { user } = useAuth();
@@ -27,18 +27,18 @@ export function CustomerProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+      try {
+        const data = await apiFetch('/profiles?id=' + user.id).then(r => r[0]);
 
-      if (data) {
-        setFullName(data.full_name || user.fullName);
-        setEmail(data.email || user.email);
-        setPhone(data.phone || "");
-        setLoyaltyTier(data.loyalty_tier || "Silver");
-        setLoyaltyPoints(data.loyalty_points || 0);
+        if (data) {
+          setFullName(data.full_name || user.fullName);
+          setEmail(data.email || user.email);
+          setPhone(data.phone || "");
+          setLoyaltyTier(data.loyalty_tier || "Silver");
+          setLoyaltyPoints(data.loyalty_points || 0);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
     loadProfile();
@@ -50,14 +50,14 @@ export function CustomerProfilePage() {
     setIsSaving(true);
 
     try {
-      await supabase
-        .from("profiles")
-        .update({
+      await apiFetch(`/profiles/${user.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
           full_name: fullName,
           phone,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+      });
 
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);

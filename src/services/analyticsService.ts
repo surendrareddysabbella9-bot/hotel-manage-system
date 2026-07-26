@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api';
 
 export interface TopDish {
   name: string;
@@ -20,22 +20,20 @@ export interface AnalyticsData {
 
 export const analyticsService = {
   async getAnalytics(): Promise<AnalyticsData> {
-    const [ordersRes, itemsRes, custRes] = await Promise.all([
-      supabase.from('orders').select('*'),
-      supabase.from('order_items').select('*'),
-      supabase.from('profiles').select('id'),
+    const [orders, orderItems, profiles] = await Promise.all([
+      apiFetch('/orders'),
+      apiFetch('/order_items'),
+      apiFetch('/profiles'),
     ]);
 
-    const orders = ordersRes.data || [];
-    const orderItems = itemsRes.data || [];
-    const customerCount = custRes.data?.length || 0;
+    const customerCount = profiles?.length || 0;
 
-    const totalRev = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const totalRev = orders.reduce((sum: number, o: any) => sum + Number(o.total || 0), 0);
     const avgVal = orders.length > 0 ? totalRev / orders.length : 0;
 
     // Aggregate top performing menu items
     const itemMap = new Map<string, { orders: number; revenue: number }>();
-    orderItems.forEach((item) => {
+    orderItems.forEach((item: any) => {
       const name = item.name || 'Dish';
       const qty = item.quantity || 1;
       const price = Number(item.unit_price || 0) * qty;

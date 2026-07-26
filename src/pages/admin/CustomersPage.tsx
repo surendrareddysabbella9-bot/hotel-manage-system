@@ -61,7 +61,7 @@ export function CustomersPage() {
       ) : error ? (
         <ErrorState title="Failed to load customer directory" message={error.message} onRetry={refetch} />
       ) : isEmpty ? (
-        <EmptyState title="No customer profiles found" description="There are currently no customer profiles registered in Supabase." />
+        <EmptyState title="No customer profiles found" description="There are currently no customer profiles registered in the database." />
       ) : (
         <DataTable data={filtered} columns={columns} keyExtractor={(c) => c.id} />
       )}

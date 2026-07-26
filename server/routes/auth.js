@@ -94,7 +94,7 @@ router.post('/login', async (req, res) => {
     const roleVal = (rawRole === 'admin' || rawRole === 'manager') ? 'admin' : (rawRole === 'customer' ? 'customer' : 'staff');
 
     // 4. Generate JWT
-    const token = jwt.sign({ id: user.id, email: user.email, role: roleVal }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: roleVal, fullName: user.full_name, createdAt: user.created_at }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       user: {
@@ -110,6 +110,29 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error during login' });
   }
+});
+
+// GET /api/auth/me
+router.get('/me', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ error: 'Unauthorized: No token' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    
+    // We packed everything in the token for speed, but in a real app you'd query the DB here
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        createdAt: user.createdAt
+      }
+    });
+  });
 });
 
 export default router;

@@ -71,7 +71,7 @@ export function AdminDashboardPage() {
         />
         <EmptyState
           title="No dashboard data found"
-          description="There is currently no metric data available from Supabase."
+          description="There is currently no metric data available from the database."
           actionLabel="Refresh Data"
           onAction={refetch}
         />

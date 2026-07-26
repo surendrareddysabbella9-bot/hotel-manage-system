@@ -1,18 +1,11 @@
-import { supabase } from '@/lib/supabase';
 import type { MenuCategory, MenuItem } from '@/types';
+import { apiFetch } from '@/lib/api';
 
 export const menuService = {
   async getCategories(): Promise<MenuCategory[]> {
-    const { data, error } = await supabase
-      .from('menu_categories')
-      .select('*')
-      .order('display_order', { ascending: true });
-
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to fetch menu categories');
-    }
-
-    return data.map((c) => ({
+    const data = await apiFetch('/menu_categories?order=display_order.asc');
+    
+    return data.map((c: any) => ({
       id: c.id,
       name: c.name,
       slug: c.slug,
@@ -21,16 +14,11 @@ export const menuService = {
   },
 
   async getMenuItems(): Promise<MenuItem[]> {
-    const { data, error } = await supabase
-      .from('menu_items')
-      .select('*, menu_categories(id, name, slug)')
-      .order('created_at', { ascending: false });
+    // In a real custom backend you would join menu_categories, but for now we'll do it manually 
+    // or just rely on the IDs if the UI doesn't strictly need the joined category name
+    const data = await apiFetch('/menu_items?order=created_at.desc');
 
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to fetch menu items');
-    }
-
-    return data.map((item) => ({
+    return data.map((item: any) => ({
       id: item.id,
       categoryId: item.category_id,
       name: item.name,
@@ -45,18 +33,21 @@ export const menuService = {
   },
 
   async toggleAvailability(itemId: string, available: boolean): Promise<boolean> {
-    const { error } = await supabase
-      .from('menu_items')
-      .update({ available })
-      .eq('id', itemId);
-
-    return !error;
+    try {
+      await apiFetch(`/menu_items/${itemId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ available })
+      });
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   async createMenuItem(newItem: Omit<MenuItem, 'id'>): Promise<MenuItem> {
-    const { data, error } = await supabase
-      .from('menu_items')
-      .insert({
+    const data = await apiFetch('/menu_items', {
+      method: 'POST',
+      body: JSON.stringify({
         category_id: newItem.categoryId,
         name: newItem.name,
         description: newItem.description,
@@ -67,12 +58,7 @@ export const menuService = {
         popular: newItem.popular || false,
         tags: newItem.tags,
       })
-      .select()
-      .single();
-
-    if (error || !data) {
-      throw new Error(error?.message || 'Failed to create menu item');
-    }
+    });
 
     return {
       id: data.id,
