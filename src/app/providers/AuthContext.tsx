@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   role: UserRole;
   isLoading: boolean;
+  signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<User>;
   loginWithEmail: (email: string, password?: string) => Promise<User>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -44,6 +45,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: UserRole
+  ): Promise<User> => {
+    setIsLoading(true);
+    try {
+      const newUser = await authService.signUp(email, password, fullName, role);
+      setUser(newUser);
+      return newUser;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const loginWithEmail = async (email: string, password?: string): Promise<User> => {
     setIsLoading(true);
     try {
@@ -72,6 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         role: user?.role || 'customer',
         isLoading,
+        signUp,
         loginWithEmail,
         loginWithGoogle,
         logout,
