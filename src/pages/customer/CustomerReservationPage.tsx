@@ -10,30 +10,38 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { ReservationCard } from "@/components/cards/ReservationCard";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { useReservations } from "@/hooks/useReservations";
+import { useAuth } from "@/app/providers/AuthContext";
 import type { Reservation } from "@/types";
 
 export function CustomerReservationPage() {
+  const { user } = useAuth();
   const { reservations, isLoading, createReservation } = useReservations();
   const [date, setDate] = useState("2026-07-26");
   const [time, setTime] = useState("19:00");
   const [partySize, setPartySize] = useState("4");
   const [specialRequests, setSpecialRequests] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
   const handleBookTable = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newReservation: Omit<Reservation, "id"> = {
-      customerId: "user-002",
-      customerName: "Sarah Chen",
-      partySize: parseInt(partySize, 10),
-      date,
-      time,
-      status: "confirmed",
-      specialRequests: specialRequests || undefined,
-    };
+    setIsSubmitting(true);
+    try {
+      const newReservation: Omit<Reservation, "id"> = {
+        customerId: user?.id || "cust-1",
+        customerName: user?.fullName || "Guest Diner",
+        partySize: parseInt(partySize, 10),
+        date,
+        time,
+        status: "confirmed",
+        specialRequests: specialRequests || undefined,
+      };
 
-    await createReservation(newReservation);
-    setIsSuccessOpen(true);
+      await createReservation(newReservation);
+      setIsSuccessOpen(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -110,8 +118,8 @@ export function CustomerReservationPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
-                Confirm Reservation
+              <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                {isSubmitting ? "Securing Table..." : "Confirm Reservation"}
               </Button>
             </form>
           </CardContent>

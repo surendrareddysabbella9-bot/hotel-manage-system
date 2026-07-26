@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Mail, Phone, Award, ShoppingBag, ShieldCheck, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,20 +10,60 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { useAuth } from "@/app/providers/AuthContext";
 import { useOrders } from "@/hooks/useOrders";
+import { supabase } from "@/lib/supabase";
 
 export function CustomerProfilePage() {
   const { user } = useAuth();
-  const { orders, isLoading } = useOrders();
+  const { orders, isLoading: isOrdersLoading } = useOrders();
 
-  const [fullName, setFullName] = useState(user?.fullName || "Sarah Chen");
-  const [email, setEmail] = useState(user?.email || "sarah@example.com");
-  const [phone, setPhone] = useState("+91 9876543210");
+  const [fullName, setFullName] = useState(user?.fullName || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState("");
+  const [loyaltyTier, setLoyaltyTier] = useState("Silver");
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (data) {
+        setFullName(data.full_name || user.fullName);
+        setEmail(data.email || user.email);
+        setPhone(data.phone || "");
+        setLoyaltyTier(data.loyalty_tier || "Silver");
+        setLoyaltyPoints(data.loyalty_points || 0);
+      }
+    }
+    loadProfile();
+  }, [user]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    if (!user) return;
+    setIsSaving(true);
+
+    try {
+      await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          phone,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -40,7 +80,7 @@ export function CustomerProfilePage() {
             <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary mb-2">
               <User className="size-10" />
             </div>
-            <CardTitle className="text-lg font-bold">{fullName}</CardTitle>
+            <CardTitle className="text-lg font-bold">{fullName || "Valued Diner"}</CardTitle>
             <p className="text-xs text-muted-foreground">{email}</p>
           </CardHeader>
           <CardContent className="space-y-4 pt-4 border-t border-border text-xs">
@@ -49,7 +89,7 @@ export function CustomerProfilePage() {
                 <Award className="size-4 text-warning" />
                 <span className="font-semibold">Loyalty Status</span>
               </div>
-              <Badge variant="warning">Gold Member</Badge>
+              <Badge variant="warning">{loyaltyTier} Member</Badge>
             </div>
 
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
@@ -57,7 +97,7 @@ export function CustomerProfilePage() {
                 <ShieldCheck className="size-4 text-primary" />
                 <span className="font-semibold">Reward Points</span>
               </div>
-              <span className="font-bold text-sm text-primary">850 pts</span>
+              <span className="font-bold text-sm text-primary">{loyaltyPoints} pts</span>
             </div>
           </CardContent>
         </Card>
@@ -78,6 +118,7 @@ export function CustomerProfilePage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="pl-9"
+                    required
                   />
                 </div>
               </div>
@@ -90,8 +131,8 @@ export function CustomerProfilePage() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9"
+                    disabled
+                    className="pl-9 bg-muted/50 cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -102,6 +143,7 @@ export function CustomerProfilePage() {
                   <Phone className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
                   <Input
                     id="phone"
+                    placeholder="+91 9876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="pl-9"
@@ -113,11 +155,11 @@ export function CustomerProfilePage() {
             <CardFooter className="flex items-center justify-between pt-4 border-t border-border">
               {isSaved ? (
                 <p className="text-xs text-success font-semibold flex items-center gap-1">
-                  Profile updated successfully!
+                  Profile updated successfully in database!
                 </p>
               ) : <div />}
-              <Button type="submit" size="sm" className="gap-2">
-                <Save className="size-3.5" /> Save Changes
+              <Button type="submit" size="sm" className="gap-2" disabled={isSaving}>
+                <Save className="size-3.5" /> {isSaving ? "Saving..." : "Save Changes"}
               </Button>
             </CardFooter>
           </form>
@@ -129,7 +171,7 @@ export function CustomerProfilePage() {
         <h3 className="text-base font-semibold flex items-center gap-2">
           <ShoppingBag className="size-4 text-primary" /> Order History ({orders.length})
         </h3>
-        {isLoading ? (
+        {isOrdersLoading ? (
           <LoadingSkeleton variant="table" count={3} />
         ) : (
           <div className="space-y-3">
