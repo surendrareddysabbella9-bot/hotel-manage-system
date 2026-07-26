@@ -26,6 +26,9 @@ async function initDB() {
     // Remove RLS
     schemaSql = schemaSql.replace(/ALTER TABLE .* ENABLE ROW LEVEL SECURITY;/g, '');
 
+    console.log('Resetting Database...');
+    await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
+    
     console.log('Running Schema...');
     await pool.query(schemaSql);
     console.log('Schema created successfully.');
