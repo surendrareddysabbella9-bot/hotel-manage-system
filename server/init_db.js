@@ -50,6 +50,9 @@ async function initDB() {
       (match, p1, p2) => `INSERT INTO profiles (${p1}, password_hash) VALUES (${p2}, '${hash}');`
     );
 
+    // Fix array syntax for tags: "['vegetarian']" -> ARRAY['vegetarian']
+    seedSql = seedSql.replace(/"\[(.*?)\]"/g, 'ARRAY[$1]');
+
     console.log('Running Seed (this may take a moment)...');
     await pool.query(seedSql);
     console.log('Seed data inserted successfully.');
