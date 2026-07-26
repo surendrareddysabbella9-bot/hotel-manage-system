@@ -20,10 +20,6 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api', apiRoutes);
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'RestaurantOS Backend is running' });
@@ -38,6 +34,10 @@ app.get('/api/setup-database', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api', apiRoutes);
 
 // Serve static frontend in production
 app.use(express.static(path.join(__dirname, '../dist')));
