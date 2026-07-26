@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { orderService } from '@/services/orderService';
 import type { Order, OrderStatus } from '@/types';
 
@@ -30,7 +31,7 @@ export function useOrders() {
     });
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [fetchOrders]);
 

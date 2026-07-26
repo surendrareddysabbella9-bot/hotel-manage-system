@@ -31,30 +31,33 @@ export const tableService = {
   },
 
   subscribeToTables(onUpdate: (table: RestaurantTable) => void) {
-    return supabase
-      .channel('public:restaurant_tables')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'restaurant_tables' },
-        (payload) => {
-          if (payload.new) {
-            const raw = payload.new as {
-              id: string;
-              number: number;
-              capacity: number;
-              status: string;
-              section: string;
-            };
-            onUpdate({
-              id: raw.id,
-              number: raw.number,
-              capacity: raw.capacity,
-              status: raw.status as TableStatus,
-              section: raw.section,
-            });
-          }
+    const channelId = `tables_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const channel = supabase.channel(channelId);
+
+    channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'restaurant_tables' },
+      (payload) => {
+        if (payload.new) {
+          const raw = payload.new as {
+            id: string;
+            number: number;
+            capacity: number;
+            status: string;
+            section: string;
+          };
+          onUpdate({
+            id: raw.id,
+            number: raw.number,
+            capacity: raw.capacity,
+            status: raw.status as TableStatus,
+            section: raw.section,
+          });
         }
-      )
-      .subscribe();
+      }
+    );
+
+    channel.subscribe();
+    return channel;
   },
 };

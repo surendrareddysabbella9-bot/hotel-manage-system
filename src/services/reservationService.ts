@@ -55,4 +55,43 @@ export const reservationService = {
       specialRequests: data.special_requests,
     };
   },
+
+  subscribeToReservations(onUpdate: (reservation: Reservation) => void) {
+    const channelId = `reservations_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const channel = supabase.channel(channelId);
+
+    channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'reservations' },
+      (payload) => {
+        if (payload.new) {
+          const raw = payload.new as {
+            id: string;
+            customer_id?: string;
+            customer_name: string;
+            party_size: number;
+            reservation_date: string;
+            reservation_time: string;
+            table_number?: number;
+            status: string;
+            special_requests?: string;
+          };
+          onUpdate({
+            id: raw.id,
+            customerId: raw.customer_id || 'cust-1',
+            customerName: raw.customer_name,
+            partySize: raw.party_size,
+            date: raw.reservation_date,
+            time: raw.reservation_time,
+            tableNumber: raw.table_number || undefined,
+            status: raw.status as ReservationStatus,
+            specialRequests: raw.special_requests || undefined,
+          });
+        }
+      }
+    );
+
+    channel.subscribe();
+    return channel;
+  },
 };

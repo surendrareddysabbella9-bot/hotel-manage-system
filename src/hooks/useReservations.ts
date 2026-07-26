@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { reservationService } from '@/services/reservationService';
 import type { Reservation } from '@/types';
 
@@ -22,6 +23,16 @@ export function useReservations() {
 
   useEffect(() => {
     fetchReservations();
+
+    const channel = reservationService.subscribeToReservations((updatedRes) => {
+      setReservations((prev) =>
+        prev.map((r) => (r.id === updatedRes.id ? updatedRes : r))
+      );
+    });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchReservations]);
 
   const createReservation = async (newRes: Omit<Reservation, 'id'>) => {

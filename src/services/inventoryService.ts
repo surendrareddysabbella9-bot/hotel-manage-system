@@ -59,4 +59,41 @@ export const inventoryService = {
 
     return true;
   },
+
+  subscribeToInventory(onUpdate: (item: InventoryItem) => void) {
+    const channelId = `inventory_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const channel = supabase.channel(channelId);
+
+    channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'inventory' },
+      (payload) => {
+        if (payload.new) {
+          const raw = payload.new as {
+            id: string;
+            name: string;
+            category: string;
+            quantity: number;
+            unit: string;
+            min_threshold: number;
+            status: string;
+            last_restocked: string;
+          };
+          onUpdate({
+            id: raw.id,
+            name: raw.name,
+            category: raw.category,
+            quantity: Number(raw.quantity),
+            unit: raw.unit,
+            minThreshold: Number(raw.min_threshold),
+            status: raw.status as InventoryStatus,
+            lastRestocked: raw.last_restocked,
+          });
+        }
+      }
+    );
+
+    channel.subscribe();
+    return channel;
+  },
 };

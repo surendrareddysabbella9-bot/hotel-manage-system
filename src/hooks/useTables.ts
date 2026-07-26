@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { tableService } from '@/services/tableService';
 import type { RestaurantTable, TableStatus } from '@/types';
 
@@ -23,7 +24,6 @@ export function useTables() {
   useEffect(() => {
     fetchTables();
 
-    // Realtime listener for table status updates across staff devices
     const channel = tableService.subscribeToTables((updatedTable) => {
       setTables((prev) =>
         prev.map((t) => (t.id === updatedTable.id ? updatedTable : t))
@@ -31,7 +31,7 @@ export function useTables() {
     });
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [fetchTables]);
 

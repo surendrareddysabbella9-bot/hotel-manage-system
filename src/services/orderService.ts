@@ -56,39 +56,42 @@ export const orderService = {
   },
 
   subscribeToOrders(onUpdate: (order: Order) => void) {
-    return supabase
-      .channel('public:orders')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders' },
-        (payload) => {
-          if (payload.new) {
-            const raw = payload.new as {
-              id: string;
-              order_number: string;
-              customer_id?: string;
-              customer_name?: string;
-              table_number?: number;
-              status: string;
-              total: number;
-              created_at: string;
-              updated_at: string;
-            };
-            onUpdate({
-              id: raw.id,
-              orderNumber: raw.order_number,
-              customerId: raw.customer_id || 'cust-1',
-              customerName: raw.customer_name || 'Guest Diner',
-              tableNumber: raw.table_number,
-              status: raw.status as OrderStatus,
-              total: Number(raw.total),
-              createdAt: raw.created_at,
-              updatedAt: raw.updated_at,
-              items: [],
-            });
-          }
+    const channelId = `orders_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const channel = supabase.channel(channelId);
+
+    channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'orders' },
+      (payload) => {
+        if (payload.new) {
+          const raw = payload.new as {
+            id: string;
+            order_number: string;
+            customer_id?: string;
+            customer_name?: string;
+            table_number?: number;
+            status: string;
+            total: number;
+            created_at: string;
+            updated_at: string;
+          };
+          onUpdate({
+            id: raw.id,
+            orderNumber: raw.order_number,
+            customerId: raw.customer_id || 'cust-1',
+            customerName: raw.customer_name || 'Guest Diner',
+            tableNumber: raw.table_number,
+            status: raw.status as OrderStatus,
+            total: Number(raw.total),
+            createdAt: raw.created_at,
+            updatedAt: raw.updated_at,
+            items: [],
+          });
         }
-      )
-      .subscribe();
+      }
+    );
+
+    channel.subscribe();
+    return channel;
   },
 };
