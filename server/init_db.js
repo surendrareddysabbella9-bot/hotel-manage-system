@@ -44,7 +44,7 @@ async function initDB() {
     // The columns part:
     seedSql = seedSql.replace(
       /INSERT INTO profiles \((.*?)\) VALUES \((.*?)\);/g,
-      `INSERT INTO profiles ($1, password_hash) VALUES ($2, '${hash}');`
+      (match, p1, p2) => `INSERT INTO profiles (${p1}, password_hash) VALUES (${p2}, '${hash}');`
     );
 
     console.log('Running Seed (this may take a moment)...');
