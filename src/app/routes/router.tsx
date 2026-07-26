@@ -38,63 +38,71 @@ import {
 } from "@/pages/staff";
 
 export const router = createBrowserRouter([
+  // Landing Page Root
   {
     path: ROUTES.landing,
     element: <LandingPage />,
   },
+
+  // Customer Portal Logins & Auth Routes
   {
     element: <AuthLayout />,
     children: [
+      { path: "/customer/login", element: <LoginPage /> },
+      { path: "/admin/login", element: <LoginPage /> },
+      { path: "/staff/login", element: <LoginPage /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.signup, element: <SignupPage /> },
       { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
     ],
   },
-  {
-    element: <CustomerLayout />,
-    children: [
-      { path: ROUTES.customer.home, element: <CustomerHomePage /> },
-      { path: ROUTES.customer.menu, element: <DigitalMenuPage /> },
-      { path: ROUTES.customer.cart, element: <CartPage /> },
-      { path: ROUTES.customer.reservation, element: <CustomerReservationPage /> },
-      { path: ROUTES.customer.tracking, element: <OrderTrackingPage /> },
-      { path: ROUTES.customer.profile, element: <CustomerProfilePage /> },
-    ],
-  },
-  {
-    element: <StaffLayout />,
-    children: [
-      { path: ROUTES.staff.kitchen, element: <KitchenDashboardPage /> },
-      { path: ROUTES.staff.orders, element: <StaffOrdersPage /> },
-      { path: ROUTES.staff.tables, element: <TableManagementPage /> },
-    ],
-  },
-  {
-    element: <AdminLayout />,
-    children: [
-      { path: ROUTES.admin.dashboard, element: <AdminDashboardPage /> },
-      { path: ROUTES.admin.orders, element: <AdminOrdersPage /> },
-      { path: ROUTES.admin.menu, element: <MenuManagementPage /> },
-      { path: ROUTES.admin.inventory, element: <InventoryPage /> },
-      { path: ROUTES.admin.reservations, element: <AdminReservationsPage /> },
-      { path: ROUTES.admin.customers, element: <CustomersPage /> },
-      { path: ROUTES.admin.staff, element: <StaffManagementPage /> },
-      { path: ROUTES.admin.analytics, element: <AnalyticsPage /> },
-      { path: ROUTES.admin.settings, element: <SettingsPage /> },
-    ],
-  },
-  {
-    path: "/admin",
-    element: <Navigate to={ROUTES.admin.dashboard} replace />,
-  },
+
+  // 1. Customer Portal Route Tree
   {
     path: "/customer",
-    element: <Navigate to={ROUTES.customer.home} replace />,
+    element: <CustomerLayout />,
+    children: [
+      { index: true, element: <CustomerHomePage /> },
+      { path: "menu", element: <DigitalMenuPage /> },
+      { path: "cart", element: <CartPage /> },
+      { path: "reservations", element: <CustomerReservationPage /> },
+      { path: "tracking", element: <OrderTrackingPage /> },
+      { path: "profile", element: <CustomerProfilePage /> },
+    ],
   },
+
+  // 2. Admin Portal Route Tree
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      { path: "dashboard", element: <AdminDashboardPage /> },
+      { path: "orders", element: <AdminOrdersPage /> },
+      { path: "menu", element: <MenuManagementPage /> },
+      { path: "inventory", element: <InventoryPage /> },
+      { path: "reservations", element: <AdminReservationsPage /> },
+      { path: "customers", element: <CustomersPage /> },
+      { path: "staff", element: <StaffManagementPage /> },
+      { path: "analytics", element: <AnalyticsPage /> },
+      { path: "settings", element: <SettingsPage /> },
+    ],
+  },
+
+  // 3. Staff Portal Route Tree
   {
     path: "/staff",
-    element: <Navigate to={ROUTES.staff.kitchen} replace />,
+    element: <StaffLayout />,
+    children: [
+      { index: true, element: <Navigate to="/staff/kitchen" replace /> },
+      { path: "kitchen", element: <KitchenDashboardPage /> },
+      { path: "orders", element: <StaffOrdersPage /> },
+      { path: "tables", element: <TableManagementPage /> },
+      { path: "inventory", element: <InventoryPage /> },
+    ],
   },
+
+  // Fallback Catch-All
   {
     path: "*",
     element: <NotFoundPage />,
