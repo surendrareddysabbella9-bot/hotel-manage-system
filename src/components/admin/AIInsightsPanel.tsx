@@ -3,7 +3,6 @@ import { Sparkles, TrendingUp, AlertTriangle, ListFilter } from "lucide-react";
 import { aiService } from "@/services/aiService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 
 export function AIInsightsPanel() {
   const [report, setReport] = useState<any>(null);

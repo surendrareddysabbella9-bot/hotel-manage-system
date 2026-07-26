@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Search, XCircle, Printer, CheckCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/PageHeader";
