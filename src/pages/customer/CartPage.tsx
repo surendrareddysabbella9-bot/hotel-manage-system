@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ROUTES, RESTAURANT_TAX_RATE } from "@/constants";
 import { useTables } from "@/hooks/useTables";
+import { AIRecommendations } from "@/components/customer/AIRecommendations";
 
 interface CartItem {
   id: string;
@@ -51,6 +52,16 @@ export function CartPage() {
 
   const removeItem = (id: string) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleAddRecommendation = (item: any) => {
+    setCart((prev) => {
+      const existing = prev.find(p => p.id === item.id);
+      if (existing) {
+        return prev.map(p => p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p);
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
   };
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -154,6 +165,9 @@ export function CartPage() {
                 ))}
               </CardContent>
             </Card>
+
+            {/* AI Recommendations Widget */}
+            <AIRecommendations cart={cart} onAdd={handleAddRecommendation} />
 
             {/* Order Preference Details */}
             <Card>

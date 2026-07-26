@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, XCircle } from "lucide-react";
+import { useState, useRef } from "react";
+import { Search, XCircle, Printer, CheckCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
@@ -28,6 +28,17 @@ export function AdminOrdersPage() {
   const handleCancelOrder = async (orderId: string) => {
     await updateOrderStatus(orderId, "cancelled");
     setSelectedOrder(null);
+  };
+
+  const handleMarkPaid = async (orderId: string) => {
+    // In a real app we would create a payment record
+    // Here we just update order status to served (which implies paid/completed in this demo)
+    await updateOrderStatus(orderId, "served");
+    setSelectedOrder(null);
+  };
+
+  const handlePrintInvoice = () => {
+    window.print();
   };
 
   const columns: DataTableColumn<Order>[] = [
@@ -108,20 +119,29 @@ export function AdminOrdersPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between font-bold text-base pt-2">
-                <span>Total Paid</span>
+              <div className="flex justify-between text-muted-foreground pt-2">
+                <span>Subtotal</span>
+                <span>₹{(selectedOrder.total / 1.05).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Taxes (5% GST)</span>
+                <span>₹{(selectedOrder.total - (selectedOrder.total / 1.05)).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-base pt-2 border-t border-border mt-2">
+                <span>Total Amount Due</span>
                 <span className="text-primary">₹{selectedOrder.total.toFixed(2)}</span>
               </div>
 
               {selectedOrder.status !== "served" && selectedOrder.status !== "cancelled" && (
-                <DialogFooter className="pt-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full gap-2"
-                    onClick={() => handleCancelOrder(selectedOrder.id)}
-                  >
-                    <XCircle className="size-4" /> Cancel Order
+                <DialogFooter className="pt-4 flex flex-col sm:flex-row gap-2 sm:gap-0">
+                  <Button variant="outline" size="sm" onClick={handlePrintInvoice} className="w-full sm:w-auto gap-2">
+                    <Printer className="size-4" /> Invoice
+                  </Button>
+                  <Button variant="default" size="sm" onClick={() => handleMarkPaid(selectedOrder.id)} className="w-full sm:w-auto gap-2">
+                    <CheckCircle className="size-4" /> Mark Paid
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleCancelOrder(selectedOrder.id)} className="w-full sm:w-auto gap-2">
+                    <XCircle className="size-4" /> Cancel
                   </Button>
                 </DialogFooter>
               )}

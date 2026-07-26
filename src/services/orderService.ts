@@ -1,5 +1,6 @@
 import type { Order, OrderStatus } from '@/types';
 import { apiFetch } from '@/lib/api';
+import { socket } from '@/lib/socket';
 
 export const orderService = {
   async getOrders(): Promise<Order[]> {
@@ -52,37 +53,31 @@ export const orderService = {
   },
 
   subscribeToOrders(onUpdate: (order: Order) => void) {
-    // We lost Supabase Realtime WebSockets.
-    // Falling back to 5-second polling for hackathon purposes.
-    let isPolling = true;
-    let lastKnownOrders: Record<string, string> = {};
-
-    const poll = async () => {
-      if (!isPolling) return;
-      try {
-        const currentOrders = await this.getOrders();
-        
-        // Find orders that changed status or are new
-        for (const order of currentOrders) {
-          if (!lastKnownOrders[order.id] || lastKnownOrders[order.id] !== order.status) {
-            onUpdate(order);
-          }
-          lastKnownOrders[order.id] = order.status;
-        }
-      } catch (err) {
-        console.error('Polling error', err);
-      }
-      
-      if (isPolling) {
-        setTimeout(poll, 5000);
-      }
+    const handleCreated = async (payload: any) => {
+      // payload is raw order row. We should probably refetch the single order with joins
+      // For simplicity in hackathon, trigger a full refetch or handle it optimistically 
+      // by the caller. But the prompt says `onUpdate(order)`
+      // Let's just refetch all orders in the hook when this fires for safety
+      onUpdate({ ...payload, _triggerRefetch: true } as any);
     };
 
-    poll();
+    const handleUpdated = (payload: any) => {
+      // payload is raw order row
+      onUpdate({
+        id: payload.id,
+        status: payload.status,
+        updatedAt: payload.updated_at,
+        _isPartialUpdate: true
+      } as any);
+    };
+
+    socket.on('orders_created', handleCreated);
+    socket.on('orders_updated', handleUpdated);
 
     return {
       unsubscribe: () => {
-        isPolling = false;
+        socket.off('orders_created', handleCreated);
+        socket.off('orders_updated', handleUpdated);
       }
     };
   },

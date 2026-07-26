@@ -24,10 +24,18 @@ export function useOrders() {
   useEffect(() => {
     fetchOrders();
 
-    const channel = orderService.subscribeToOrders((updatedOrder) => {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
-      );
+    const channel = orderService.subscribeToOrders((updatedOrder: any) => {
+      if (updatedOrder._triggerRefetch) {
+        fetchOrders();
+      } else if (updatedOrder._isPartialUpdate) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === updatedOrder.id ? { ...o, status: updatedOrder.status, updatedAt: updatedOrder.updatedAt } : o))
+        );
+      } else {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
+        );
+      }
     });
 
     return () => {

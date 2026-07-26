@@ -88,6 +88,11 @@ router.post('/:table', async (req, res) => {
     const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING *`;
     const result = await pool.query(query, values);
     
+    // Emit event to all connected clients
+    if (req.io) {
+      req.io.emit(`${table}_created`, result.rows[0]);
+    }
+    
     res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -109,7 +114,45 @@ router.patch('/:table/:id', async (req, res) => {
     const query = `UPDATE ${table} SET ${setClause} WHERE id = $${values.length} RETURNING *`;
     const result = await pool.query(query, values);
     
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    // --- HACKATHON BONUS: Phase 5 Auto-Inventory Deduction ---
+    if (table === 'orders' && req.body.status === 'cooking') {
+      try {
+        // Find total quantity of items in this order
+        const itemsRes = await pool.query('SELECT quantity FROM order_items WHERE order_id = $1', [id]);
+        const totalItems = itemsRes.rows.reduce((sum, item) => sum + item.quantity, 0);
+        
+        if (totalItems > 0) {
+          // Deduct basic ingredients based on total items ordered (mock recipe deduction)
+          const deduction = totalItems * 0.5;
+          await pool.query(`
+            UPDATE inventory 
+            SET quantity = GREATEST(quantity - $1, 0) 
+            WHERE name IN ('Onions', 'Red Tomatoes', 'Whole Paneer', 'Fresh Chicken')
+          `, [deduction]);
+
+          // Trigger low stock alerts if thresholds are crossed
+          await pool.query(`
+            UPDATE inventory 
+            SET status = 'low_stock' 
+            WHERE quantity <= min_threshold AND status = 'in_stock'
+          `);
+          
+          // Emit inventory update socket event so admin dashboard updates live
+          if (req.io) {
+            req.io.emit('inventory_updated', { message: 'Inventory deducted for order cooking' });
+          }
+        }
+      } catch (err) {
+        console.error('Inventory deduction failed', err);
+      }
+    }
+    // --------------------------------------------------------
+
+    // Emit event to all connected clients
+    if (req.io) {
+      req.io.emit(`${table}_updated`, result.rows[0]);
+    }
+
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -124,6 +167,12 @@ router.delete('/:table/:id', async (req, res) => {
   try {
     const result = await pool.query(`DELETE FROM ${table} WHERE id = $1 RETURNING *`, [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    
+    // Emit event to all connected clients
+    if (req.io) {
+      req.io.emit(`${table}_deleted`, { id });
+    }
+
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });

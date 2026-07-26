@@ -7,6 +7,7 @@ import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { AIInsightsPanel } from "@/components/admin/AIInsightsPanel";
 
 export function AnalyticsPage() {
   const { data, isLoading, error, isEmpty, refetch } = useAnalytics();
@@ -60,6 +61,8 @@ export function AnalyticsPage() {
         title="Business Intelligence & Analytics"
         description="Comprehensive performance metrics, revenue growth trends, and menu item demand"
       />
+
+      <AIInsightsPanel />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatisticsCard id="stat-rev" label="Monthly Revenue" value={data.monthlyRevenue} change={data.monthlyRevenueChange} changeLabel="vs last month" icon="DollarSign" />
