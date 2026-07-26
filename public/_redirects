@@ -1,0 +1,5 @@
+/*
+  Render.com SPA routing — redirects all paths to index.html
+  so React Router handles client-side navigation.
+*/
+/* /index.html 200

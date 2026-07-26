@@ -27,11 +27,12 @@ export function LoginPage() {
     targetRole = "staff";
   }
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState<string>(location.state?.prefillEmail || "");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMsg] = useState<string>(location.state?.successMessage || "");
   const [errorMsg, setErrorMsg] = useState<string>(
-    location.state?.message || ""
+    location.state?.unauthorized ? (location.state?.message || "") : ""
   );
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -89,6 +90,13 @@ export function LoginPage() {
           Enter your account credentials to access the {targetPortal.toLowerCase()} console
         </p>
       </div>
+
+      {successMsg && (
+        <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-xs font-semibold text-green-400 flex items-center gap-2">
+          <span>✓</span>
+          <span>{successMsg}</span>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive flex items-center gap-2">

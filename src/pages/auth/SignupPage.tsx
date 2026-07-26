@@ -29,17 +29,32 @@ export function SignupPage() {
       return;
     }
 
+    if (password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await signUp(email, password, fullName, role);
 
-      if (role === "admin") {
-        navigate(ROUTES.admin.dashboard);
-      } else if (role === "staff") {
-        navigate(ROUTES.staff.kitchen);
-      } else {
-        navigate(ROUTES.customer.home);
-      }
+      // Navigate to the correct login portal with a success message.
+      // We do NOT go directly to the portal because the auth session
+      // may not be fully loaded yet, causing ProtectedRoute to block.
+      const loginPath =
+        role === "admin"
+          ? ROUTES.admin.login
+          : role === "staff"
+          ? ROUTES.staff.login
+          : ROUTES.customer.login;
+
+      navigate(loginPath, {
+        state: {
+          successMessage: "Account created! Please sign in to continue.",
+          prefillEmail: email,
+        },
+        replace: true,
+      });
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Failed to create account. Please try again."
@@ -48,6 +63,7 @@ export function SignupPage() {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="space-y-6">
