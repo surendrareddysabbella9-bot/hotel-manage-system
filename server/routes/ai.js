@@ -41,14 +41,11 @@ router.post('/recommend', async (req, res) => {
     const result = await model.generateContent(prompt);
     let text = result.response.text().trim();
     
-    // Strip markdown if it returned any
-    if (text.startsWith('\`\`\`json')) {
-      text = text.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-    } else if (text.startsWith('\`\`\`')) {
-      text = text.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
-    }
-
-    const recommendedIds = JSON.parse(text);
+    // Extract JSON array
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("No JSON array found");
+    
+    const recommendedIds = JSON.parse(jsonMatch[0]);
     
     // Fetch full details of recommended items
     const recommendations = menuItems.filter(item => recommendedIds.includes(item.id));
@@ -102,13 +99,11 @@ router.get('/analytics', async (req, res) => {
     const result = await model.generateContent(prompt);
     let text = result.response.text().trim();
     
-    if (text.startsWith('\`\`\`json')) {
-      text = text.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-    } else if (text.startsWith('\`\`\`')) {
-      text = text.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
-    }
+    // Extract JSON object
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON object found");
 
-    const report = JSON.parse(text);
+    const report = JSON.parse(jsonMatch[0]);
     res.json(report);
   } catch (error) {
     console.error('AI Analytics Error:', error);
@@ -153,13 +148,11 @@ router.post('/chat-order', async (req, res) => {
     const result = await model.generateContent(prompt);
     let text = result.response.text().trim();
     
-    if (text.startsWith('\`\`\`json')) {
-      text = text.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-    } else if (text.startsWith('\`\`\`')) {
-      text = text.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
-    }
+    // Extract JSON object
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON object found: " + text);
 
-    const aiResponse = JSON.parse(text);
+    const aiResponse = JSON.parse(jsonMatch[0]);
 
     // Hydrate the items with full details for the frontend
     const hydratedItems = (aiResponse.itemsToAdd || []).map(item => {
