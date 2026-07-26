@@ -20,22 +20,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // 1. Subscribe to auth state changes FIRST
-    //    This fires immediately with the current session state on mount.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const profile = await authService.getProfileByUserId(session.user.id);
+    // 1. Fetch current profile on mount
+    const loadUser = async () => {
+      try {
+        const profile = await authService.getCurrentProfile();
         setUser(profile);
-      } else {
+      } catch (err) {
         setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-      // Always stop loading after the first auth state event
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
     };
+    
+    loadUser();
   }, []);
 
   const signUp = async (
@@ -47,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const newUser = await authService.signUp(email, password, fullName, role);
-      // Don't set user here — onAuthStateChange will fire and handle it
+      setUser(newUser);
       return newUser;
     } finally {
       setIsLoading(false);
@@ -66,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
+    await authService.loginWithGoogle();
   };
 
   const logout = async () => {
