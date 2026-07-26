@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { MessageSquare, X, Send, Bot, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
