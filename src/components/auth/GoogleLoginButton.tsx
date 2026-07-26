@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/app/providers/AuthContext";
 import { ROUTES } from "@/constants";
 
 declare global {
