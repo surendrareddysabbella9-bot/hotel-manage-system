@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   role: UserRole;
   isLoading: boolean;
-  loginWithRole: (role: UserRole) => Promise<void>;
+  loginWithEmail: (email: string) => Promise<User>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -42,15 +42,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const loginWithRole = async (role: UserRole) => {
+  const loginWithEmail = async (email: string): Promise<User> => {
     setIsLoading(true);
-    const u = await authService.loginWithRole(role);
+    const u = await authService.loginWithEmail(email);
     setUser(u);
     setIsLoading(false);
+    return u;
   };
 
   const loginWithGoogle = async () => {
-    await authService.loginWithGoogle();
+    await supabase.auth.signInWithOAuth({ provider: 'google' });
   };
 
   const logout = async () => {
@@ -66,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         role: user?.role || 'admin',
         isLoading,
-        loginWithRole,
+        loginWithEmail,
         loginWithGoogle,
         logout,
       }}

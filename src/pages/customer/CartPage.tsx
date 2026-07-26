@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, CreditCard } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-import { ROUTES } from "@/constants";
-import { useMenu } from "@/hooks/useMenu";
+import { ROUTES, RESTAURANT_TAX_RATE } from "@/constants";
+import { useTables } from "@/hooks/useTables";
 
 interface CartItem {
   id: string;
@@ -23,45 +23,17 @@ interface CartItem {
 }
 
 export function CartPage() {
-  const { items: menuItems, isLoading } = useMenu();
+  const navigate = useNavigate();
+  const { tables, isLoading } = useTables();
 
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (menuItems.length >= 2) {
-      return [
-        {
-          id: "cart-1",
-          menuItemId: menuItems[0].id,
-          name: menuItems[0].name,
-          price: menuItems[0].price,
-          quantity: 2,
-          imageUrl: menuItems[0].imageUrl,
-        },
-        {
-          id: "cart-2",
-          menuItemId: menuItems[1].id,
-          name: menuItems[1].name,
-          price: menuItems[1].price,
-          quantity: 1,
-          imageUrl: menuItems[1].imageUrl,
-        },
-      ];
-    }
-    return [
-      {
-        id: "cart-1",
-        menuItemId: "item-001",
-        name: "Butter Chicken",
-        price: 350,
-        quantity: 2,
-        imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
-      },
-    ];
-  });
-
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [tableNumber, setTableNumber] = useState("4");
+  const [selectedTableId, setSelectedTableId] = useState<string>("");
   const [orderType, setOrderType] = useState<"dine_in" | "takeout">("dine_in");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const availableTables = tables.filter((t) => t.status === "available");
 
   const updateQuantity = (id: string, delta: number) => {
     setCart((prev) =>
@@ -82,22 +54,32 @@ export function CartPage() {
   };
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.05; // 5% GST
+  const tax = subtotal * RESTAURANT_TAX_RATE;
   const finalDiscount = (subtotal * discount) / 100;
   const total = subtotal + tax - finalDiscount;
 
   const applyPromo = (e: React.FormEvent) => {
     e.preventDefault();
-    if (promoCode.toUpperCase() === "WELCOME10") {
+    if (promoCode.trim().toUpperCase() === "SAVE10") {
       setDiscount(10);
+    } else {
+      setDiscount(0);
     }
+  };
+
+  const handleCheckout = async () => {
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      navigate(ROUTES.customer.tracking);
+    }, 500);
   };
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16">
       <PageHeader
         title="Your Dining Basket"
-        description="Review selected dishes, apply discounts, and place your order"
+        description="Review selected dishes, select table availability, and place your order"
       />
 
       {isLoading ? (
@@ -105,9 +87,9 @@ export function CartPage() {
       ) : cart.length === 0 ? (
         <EmptyState
           title="Your basket is empty"
-          description="Looks like you haven't added any dishes to your basket yet."
+          description="You have no dishes currently in your cart. Explore our digital menu to add delicious items."
           actionLabel="Explore Menu"
-          onAction={() => window.location.href = ROUTES.customer.menu}
+          onAction={() => navigate(ROUTES.customer.menu)}
         />
       ) : (
         <div className="grid gap-8 lg:grid-cols-3">
@@ -201,13 +183,20 @@ export function CartPage() {
 
                 {orderType === "dine_in" && (
                   <div className="space-y-2">
-                    <Label htmlFor="tableNumber">Table Number</Label>
-                    <Input
-                      id="tableNumber"
-                      value={tableNumber}
-                      onChange={(e) => setTableNumber(e.target.value)}
-                      placeholder="e.g. Table 4"
-                    />
+                    <Label htmlFor="tableSelect">Select Table</Label>
+                    <select
+                      id="tableSelect"
+                      value={selectedTableId}
+                      onChange={(e) => setSelectedTableId(e.target.value)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="">Select an available table...</option>
+                      {availableTables.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          Table #{t.number} ({t.section} - {t.capacity} Seats)
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
               </CardContent>
@@ -246,7 +235,7 @@ export function CartPage() {
               <CardFooter className="flex-col space-y-3">
                 <form onSubmit={applyPromo} className="flex gap-2 w-full">
                   <Input
-                    placeholder="Promo code (WELCOME10)"
+                    placeholder="Enter promo code"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
                     className="text-xs"
@@ -256,11 +245,15 @@ export function CartPage() {
                   </Button>
                 </form>
 
-                <Button className="w-full gap-2 font-semibold" size="lg" asChild>
-                  <Link to={ROUTES.customer.tracking}>
-                    <CreditCard className="size-4" /> Place & Pay ₹{total.toFixed(2)}
-                    <ArrowRight className="size-4 ml-auto" />
-                  </Link>
+                <Button
+                  className="w-full gap-2 font-semibold"
+                  size="lg"
+                  onClick={handleCheckout}
+                  disabled={isSubmitting}
+                >
+                  <CreditCard className="size-4" />
+                  {isSubmitting ? "Processing..." : `Place Order · ₹${total.toFixed(2)}`}
+                  <ArrowRight className="size-4 ml-auto" />
                 </Button>
               </CardFooter>
             </Card>

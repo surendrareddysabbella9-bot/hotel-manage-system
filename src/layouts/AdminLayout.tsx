@@ -6,11 +6,33 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { adminNavItems } from "@/config/navigation";
 import { useAuth } from "@/app/providers/AuthContext";
-import type { User } from "@/types";
+import { useOrders } from "@/hooks/useOrders";
+import { useInventory } from "@/hooks/useInventory";
+import { useReservations } from "@/hooks/useReservations";
+import type { User, NavItem } from "@/types";
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const { orders } = useOrders();
+  const { lowStockCount } = useInventory();
+  const { reservations } = useReservations();
+
+  const activeOrdersCount = orders.filter((o) => o.status !== "served" && o.status !== "cancelled").length;
+  const activeReservationsCount = reservations.filter((r) => r.status === "confirmed").length;
+
+  const dynamicNavItems: NavItem[] = adminNavItems.map((item) => {
+    if (item.label === "Orders") {
+      return { ...item, badge: activeOrdersCount };
+    }
+    if (item.label === "Inventory") {
+      return { ...item, badge: lowStockCount };
+    }
+    if (item.label === "Reservations") {
+      return { ...item, badge: activeReservationsCount };
+    }
+    return item;
+  });
 
   const currentUser: User = user || {
     id: "admin-1",
@@ -30,7 +52,7 @@ export function AdminLayout() {
       />
       <div className="flex flex-1">
         <Sidebar
-          items={adminNavItems}
+          items={dynamicNavItems}
           title="Admin Console"
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}

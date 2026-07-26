@@ -2,6 +2,8 @@ export const APP_NAME = "RestaurantOS";
 export const APP_DESCRIPTION =
   "Intelligent Restaurant Management Platform powered by AI";
 
+export const RESTAURANT_TAX_RATE = 0.05; // Configurable 5% GST tax rate constant
+
 export const ROUTES = {
   landing: "/",
   login: "/login",
