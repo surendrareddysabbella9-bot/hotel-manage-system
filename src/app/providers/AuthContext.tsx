@@ -8,7 +8,7 @@ interface AuthContextType {
   role: UserRole;
   isLoading: boolean;
   signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<User>;
-  loginWithEmail: (email: string, password?: string) => Promise<User>;
+  loginWithEmail: (email: string, password: string) => Promise<User>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -20,24 +20,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Initial fetch from Supabase Auth & profiles table
-    authService.getCurrentProfile().then((profile) => {
-      if (profile) {
+    // 1. Subscribe to auth state changes FIRST
+    //    This fires immediately with the current session state on mount.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const profile = await authService.getProfileByUserId(session.user.id);
         setUser(profile);
-      }
-      setIsLoading(false);
-    }).catch(() => {
-      setIsLoading(false);
-    });
-
-    // Listener for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        const profile = await authService.getCurrentProfile();
-        if (profile) setUser(profile);
       } else {
         setUser(null);
       }
+      // Always stop loading after the first auth state event
+      setIsLoading(false);
     });
 
     return () => {
@@ -54,14 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const newUser = await authService.signUp(email, password, fullName, role);
-      setUser(newUser);
+      // Don't set user here — onAuthStateChange will fire and handle it
       return newUser;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loginWithEmail = async (email: string, password?: string): Promise<User> => {
+  const loginWithEmail = async (email: string, password: string): Promise<User> => {
     setIsLoading(true);
     try {
       const u = await authService.loginWithEmailPassword(email, password);

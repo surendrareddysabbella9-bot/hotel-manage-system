@@ -43,6 +43,11 @@ export function LoginPage() {
       return;
     }
 
+    if (!password.trim()) {
+      setErrorMsg("Please enter your password.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const loggedUser = await loginWithEmail(email, password);

@@ -1,6 +1,33 @@
 import { supabase } from '@/lib/supabase';
 import type { User, UserRole } from '@/types';
 
+// Maps a raw DB profile row (with joined roles) to our frontend User type
+function mapProfileToUser(profile: {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  created_at: string;
+  roles?: { name: string } | null;
+}): User {
+  const rawRole = (profile.roles?.name || '').toString().toLowerCase();
+  const roleVal: UserRole =
+    rawRole === 'admin' || rawRole === 'manager'
+      ? 'admin'
+      : rawRole === 'customer'
+      ? 'customer'
+      : 'staff';
+
+  return {
+    id: profile.id,
+    email: profile.email,
+    fullName: profile.full_name,
+    role: roleVal,
+    avatarUrl: profile.avatar_url || undefined,
+    createdAt: profile.created_at,
+  };
+}
+
 export const authService = {
   async getProfileByUserId(userId: string): Promise<User | null> {
     const { data: profile, error } = await supabase
@@ -10,163 +37,136 @@ export const authService = {
       .maybeSingle();
 
     if (error || !profile) return null;
-
-    const rawRole = (profile.roles?.name || '').toString().toLowerCase();
-    const roleVal: UserRole =
-      rawRole === 'admin' || rawRole === 'manager'
-        ? 'admin'
-        : rawRole === 'customer'
-        ? 'customer'
-        : 'staff';
-
-    return {
-      id: profile.id,
-      email: profile.email,
-      fullName: profile.full_name,
-      role: roleVal,
-      avatarUrl: profile.avatar_url || undefined,
-      createdAt: profile.created_at,
-    };
+    return mapProfileToUser(profile);
   },
 
+  // Returns the currently authenticated user's profile, or null if not logged in.
+  // DOES NOT fall back to querying random profiles — that caused fake login states.
   async getCurrentProfile(): Promise<User | null> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const userProfile = await this.getProfileByUserId(session.user.id);
-      if (userProfile) return userProfile;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+      return await this.getProfileByUserId(session.user.id);
+    } catch {
+      return null;
     }
-
-    // Fallback: Query first active profile from Supabase database if no active session
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*, roles(name)')
-      .limit(1)
-      .maybeSingle();
-
-    if (!profile) return null;
-
-    const rawRole = (profile.roles?.name || '').toString().toLowerCase();
-    const roleVal: UserRole =
-      rawRole === 'admin' || rawRole === 'manager'
-        ? 'admin'
-        : rawRole === 'customer'
-        ? 'customer'
-        : 'staff';
-
-    return {
-      id: profile.id,
-      email: profile.email,
-      fullName: profile.full_name,
-      role: roleVal,
-      avatarUrl: profile.avatar_url || undefined,
-      createdAt: profile.created_at,
-    };
   },
 
   async signUp(email: string, password: string, fullName: string, role: UserRole): Promise<User> {
-    // 1. Send signup request to Supabase Auth (POST /auth/v1/signup)
+    // 1. Register with Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-          role: role,
-        },
+        data: { full_name: fullName, role },
       },
     });
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error('Registration failed. No user returned.');
 
-    if (!data.user) {
-      throw new Error("Registration failed. No user returned from Supabase Auth.");
-    }
+    // 2. Find the matching role_id
+    const targetRoleName =
+      role === 'admin' ? 'Admin' : role === 'staff' ? 'Waiter' : 'Customer';
 
-    // 2. Fetch matching role_id from roles table
-    const targetRoleName = role === 'admin' ? 'admin' : role === 'staff' ? 'waiter' : 'Customer';
     const { data: roleRecord } = await supabase
       .from('roles')
       .select('id')
       .ilike('name', targetRoleName)
       .maybeSingle();
 
-    const defaultCustomerRoleId = '78a5ebd2-acf3-4276-b5a0-4a6c2e88a1ec';
-    const roleId = roleRecord?.id || defaultCustomerRoleId;
+    // 3. Fetch the Customer role as fallback
+    let roleId = roleRecord?.id;
+    if (!roleId) {
+      const { data: fallbackRole } = await supabase
+        .from('roles')
+        .select('id')
+        .ilike('name', 'Customer')
+        .maybeSingle();
+      roleId = fallbackRole?.id;
+    }
 
-    // 3. Insert user profile into public.profiles table
-    await supabase.from('profiles').upsert(
+    if (!roleId) throw new Error('No roles found in database. Please run the seed SQL first.');
+
+    // 4. Upsert profile
+    const { error: upsertError } = await supabase.from('profiles').upsert(
       {
         id: data.user.id,
         role_id: roleId,
-        email: email,
+        email,
         full_name: fullName,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'id' }
     );
 
+    if (upsertError) {
+      console.error('Profile upsert error:', upsertError.message);
+      // Don't throw — auth user was created successfully, profile will be created by trigger
+    }
+
     return {
       id: data.user.id,
-      email: email,
-      fullName: fullName,
-      role: role,
+      email,
+      fullName,
+      role,
       createdAt: data.user.created_at || new Date().toISOString(),
     };
   },
 
-  async loginWithEmailPassword(email: string, password?: string): Promise<User> {
-    // 1. Attempt Supabase Auth login if password is provided
-    if (password) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+  // Sign in with email + password using Supabase Auth ONLY.
+  // Removed the unsafe DB fallback that bypassed password checking entirely.
+  async loginWithEmailPassword(email: string, password: string): Promise<User> {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        throw new Error(error.message);
+    if (error) {
+      // Map common Supabase error messages to user-friendly text
+      if (error.message.includes('Email not confirmed')) {
+        throw new Error('Please confirm your email before signing in. Check your inbox.');
       }
-
-      if (data.user) {
-        const profile = await this.getProfileByUserId(data.user.id);
-        if (profile) return profile;
+      if (error.message.includes('Invalid login credentials')) {
+        throw new Error('Invalid email or password. Please check your credentials.');
       }
+      throw new Error(error.message);
     }
 
-    // 2. Fallback query to public.profiles table directly if password is not supplied
-    const { data: profile, error: dbError } = await supabase
-      .from('profiles')
-      .select('*, roles(name)')
-      .eq('email', email)
-      .maybeSingle();
+    if (!data.user) throw new Error('Login failed. No user returned.');
 
-    if (dbError || !profile) {
-      throw new Error('Invalid email or password. Please check your credentials.');
+    const profile = await this.getProfileByUserId(data.user.id);
+    if (!profile) {
+      // Profile doesn't exist yet — create it now
+      const { data: customerRole } = await supabase
+        .from('roles')
+        .select('id')
+        .ilike('name', 'Customer')
+        .maybeSingle();
+
+      if (customerRole?.id) {
+        await supabase.from('profiles').upsert(
+          {
+            id: data.user.id,
+            role_id: customerRole.id,
+            email: data.user.email!,
+            full_name: data.user.user_metadata?.full_name || email.split('@')[0],
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+      }
+      // Retry fetching profile
+      const retried = await this.getProfileByUserId(data.user.id);
+      if (!retried) throw new Error('Profile not found. Contact support.');
+      return retried;
     }
 
-    const rawRole = (profile.roles?.name || '').toString().toLowerCase();
-    const roleVal: UserRole =
-      rawRole === 'admin' || rawRole === 'manager'
-        ? 'admin'
-        : rawRole === 'customer'
-        ? 'customer'
-        : 'staff';
-
-    return {
-      id: profile.id,
-      email: profile.email,
-      fullName: profile.full_name,
-      role: roleVal,
-      avatarUrl: profile.avatar_url || undefined,
-      createdAt: profile.created_at,
-    };
+    return profile;
   },
 
   async loginWithGoogle(): Promise<void> {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+    await supabase.auth.signInWithOAuth({ provider: 'google' });
   },
 
   async logout(): Promise<void> {
