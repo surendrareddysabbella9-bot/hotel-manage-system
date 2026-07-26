@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { reservationService } from '@/services/reservationService';
 import type { Reservation } from '@/types';
-import { mockReservations } from '@/mocks/reservations.mock';
 
 export function useReservations() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -13,10 +12,9 @@ export function useReservations() {
     setError(null);
     try {
       const result = await reservationService.getReservations();
-      setReservations(result.length > 0 ? result : mockReservations);
+      setReservations(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load reservations'));
-      setReservations(mockReservations);
     } finally {
       setIsLoading(false);
     }

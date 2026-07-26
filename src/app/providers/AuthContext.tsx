@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, UserRole } from '@/types';
-import { authService } from '@/services/auth.service';
+import { authService } from '@/services/authService';
 import { supabase } from '@/lib/supabase';
-import { mockCurrentUser } from '@/mocks/users.mock';
 
 interface AuthContextType {
   user: User | null;
@@ -16,11 +15,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(mockCurrentUser); // Default admin user for demo
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Initial fetch from Supabase
+    // Initial fetch from Supabase database
     authService.getCurrentProfile().then((profile) => {
       if (profile) {
         setUser(profile);
@@ -35,9 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session) {
         const profile = await authService.getCurrentProfile();
         if (profile) setUser(profile);
-      } else {
-        // Fall back to default admin persona if unauthenticated demo
-        setUser(mockCurrentUser);
       }
     });
 

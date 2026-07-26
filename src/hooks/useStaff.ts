@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { staffService } from '@/services/staffService';
 import type { StaffMember } from '@/types';
-import { mockStaff } from '@/mocks/staff.mock';
 
 export function useStaff() {
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
@@ -13,10 +12,9 @@ export function useStaff() {
     setError(null);
     try {
       const result = await staffService.getStaffMembers();
-      setStaffList(result.length > 0 ? result : mockStaff);
+      setStaffList(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load staff list'));
-      setStaffList(mockStaff);
     } finally {
       setIsLoading(false);
     }

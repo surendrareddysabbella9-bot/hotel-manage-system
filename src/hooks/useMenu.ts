@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { menuService } from '@/services/menuService';
 import type { MenuCategory, MenuItem } from '@/types';
-import { mockMenuCategories, mockMenuItems } from '@/mocks/menu.mock';
 
 export function useMenu() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -14,15 +13,13 @@ export function useMenu() {
     setError(null);
     try {
       const [fetchedCats, fetchedItems] = await Promise.all([
-        menuService.getCategories().catch(() => mockMenuCategories),
-        menuService.getMenuItems().catch(() => mockMenuItems),
+        menuService.getCategories(),
+        menuService.getMenuItems(),
       ]);
-      setCategories(fetchedCats.length > 0 ? fetchedCats : mockMenuCategories);
-      setItems(fetchedItems.length > 0 ? fetchedItems : mockMenuItems);
+      setCategories(fetchedCats);
+      setItems(fetchedItems);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load menu data'));
-      setCategories(mockMenuCategories);
-      setItems(mockMenuItems);
     } finally {
       setIsLoading(false);
     }

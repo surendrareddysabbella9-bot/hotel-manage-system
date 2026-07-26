@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { orderService } from '@/services/orderService';
 import type { Order, OrderStatus } from '@/types';
-import { mockOrders } from '@/mocks/orders.mock';
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -13,10 +12,9 @@ export function useOrders() {
     setError(null);
     try {
       const result = await orderService.getOrders();
-      setOrders(result.length > 0 ? result : mockOrders);
+      setOrders(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load orders data'));
-      setOrders(mockOrders);
     } finally {
       setIsLoading(false);
     }

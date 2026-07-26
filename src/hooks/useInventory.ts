@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { inventoryService } from '@/services/inventoryService';
 import type { InventoryItem, InventoryStatus } from '@/types';
-import { mockInventory } from '@/mocks/inventory.mock';
 
 export function useInventory() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -13,10 +12,9 @@ export function useInventory() {
     setError(null);
     try {
       const result = await inventoryService.getInventory();
-      setInventory(result.length > 0 ? result : mockInventory);
+      setInventory(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load inventory data'));
-      setInventory(mockInventory);
     } finally {
       setIsLoading(false);
     }
