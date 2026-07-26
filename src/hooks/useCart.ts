@@ -15,7 +15,11 @@ let memoryCart: CartItem[] = [];
 try {
   const saved = localStorage.getItem("restaurant_cart");
   if (saved) {
-    memoryCart = JSON.parse(saved);
+    // Force cast price to Number to recover from previous buggy string state
+    memoryCart = JSON.parse(saved).map((item: any) => ({
+      ...item,
+      price: Number(item.price) || 0
+    }));
   }
 } catch (e) {
   console.error("Failed to load cart from local storage", e);
