@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { CustomerNavbar } from "./CustomerNavbar";
+import { AgenticChatbot } from "@/components/customer/AgenticChatbot";
 import { customerNavItems } from "@/config/navigation";
 import { useAuth } from "@/app/providers/AuthContext";
 import type { User } from "@/types";
@@ -44,6 +46,7 @@ export function CustomerLayout() {
           <Outlet />
         </motion.main>
       </div>
+      <AgenticChatbot />
     </div>
   );
 }

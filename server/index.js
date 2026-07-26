@@ -8,7 +8,6 @@ import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
 import aiRoutes from './routes/ai.js';
 import apiRoutes from './routes/api.js';
-import { initDB } from './init_db.js';
 
 dotenv.config();
 
@@ -38,15 +37,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'RestaurantOS Backend is running' });
 });
 
-// Setup database endpoint
-app.get('/api/setup-database', async (req, res) => {
-  try {
-    await initDB();
-    res.json({ status: 'ok', message: 'Database schema and seeds initialized successfully!' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // Routes
 app.use('/api/auth', authRoutes);

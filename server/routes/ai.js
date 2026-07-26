@@ -116,4 +116,75 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
+router.post('/chat-order', async (req, res) => {
+  if (!genAI) {
+    return res.status(503).json({ error: 'AI features are not configured on the server.' });
+  }
+
+  try {
+    const { message } = req.body;
+
+    const menuRes = await pool.query(`SELECT id, name, price, image_url FROM menu_items WHERE available = true`);
+    const menuItems = menuRes.rows;
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+    const prompt = `
+      You are a friendly, helpful, and agentic restaurant ordering assistant.
+      The user just said: "${message}"
+
+      Here is the available menu:
+      ${JSON.stringify(menuItems, null, 2)}
+
+      Analyze the user's intent. If they want to order specific items, find the closest matching items from the menu.
+      Extract the items they want and their quantities.
+      
+      You must ONLY reply with raw JSON matching this schema:
+      {
+        "reply": "Your friendly conversational response to the user, confirming what you added.",
+        "itemsToAdd": [
+          { "id": "menu_item_id_from_database", "quantity": number }
+        ]
+      }
+      If they didn't order anything, just respond normally in the "reply" field and leave "itemsToAdd" empty.
+      Do not use markdown blocks like \`\`\`json. Just raw JSON.
+    `;
+
+    const result = await model.generateContent(prompt);
+    let text = result.response.text().trim();
+    
+    if (text.startsWith('\`\`\`json')) {
+      text = text.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
+    } else if (text.startsWith('\`\`\`')) {
+      text = text.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+    }
+
+    const aiResponse = JSON.parse(text);
+
+    // Hydrate the items with full details for the frontend
+    const hydratedItems = (aiResponse.itemsToAdd || []).map(item => {
+      const menuDetails = menuItems.find(m => m.id === item.id);
+      if (menuDetails) {
+        return {
+          id: menuDetails.id,
+          menuItemId: menuDetails.id,
+          name: menuDetails.name,
+          price: menuDetails.price,
+          imageUrl: menuDetails.image_url,
+          quantity: item.quantity
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
+    res.json({
+      reply: aiResponse.reply,
+      itemsToAdd: hydratedItems
+    });
+  } catch (error) {
+    console.error('Agentic Chatbot Error:', error);
+    res.status(500).json({ error: 'Failed to process chat request' });
+  }
+});
+
 export default router;
