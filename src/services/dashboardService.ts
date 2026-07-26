@@ -60,9 +60,9 @@ export const dashboardService = {
     const recentOrders: Order[] = (recentOrdersData || []).map((o) => ({
       id: o.id,
       orderNumber: o.order_number,
-      customerId: o.customer_id || 'cust-1',
+      customerId: o.customer_id || '',
       customerName: o.customer_name || 'Guest Diner',
-      tableNumber: o.table_number || (o.table_id ? 4 : undefined),
+      tableNumber: o.table_number || undefined,
       status: o.status,
       total: Number(o.total),
       createdAt: o.created_at,

@@ -14,7 +14,7 @@ export const reservationService = {
 
     return data.map((r) => ({
       id: r.id,
-      customerId: r.customer_id || 'cust-1',
+      customerId: r.customer_id || '',
       customerName: r.customer_name,
       partySize: r.party_size,
       date: r.reservation_date,
@@ -29,7 +29,7 @@ export const reservationService = {
     const { data, error } = await supabase
       .from('reservations')
       .insert({
-        customer_id: reservation.customerId,
+        customer_id: reservation.customerId || null,
         customer_name: reservation.customerName,
         party_size: reservation.partySize,
         reservation_date: reservation.date,
@@ -46,7 +46,7 @@ export const reservationService = {
 
     return {
       id: data.id,
-      customerId: data.customer_id,
+      customerId: data.customer_id || '',
       customerName: data.customer_name,
       partySize: data.party_size,
       date: data.reservation_date,
@@ -78,7 +78,7 @@ export const reservationService = {
           };
           onUpdate({
             id: raw.id,
-            customerId: raw.customer_id || 'cust-1',
+            customerId: raw.customer_id || '',
             customerName: raw.customer_name,
             partySize: raw.party_size,
             date: raw.reservation_date,

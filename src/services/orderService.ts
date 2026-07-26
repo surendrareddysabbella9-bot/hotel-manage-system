@@ -21,9 +21,9 @@ export const orderService = {
     return data.map((o) => ({
       id: o.id,
       orderNumber: o.order_number,
-      customerId: o.customer_id || o.profiles?.id || 'cust-1',
+      customerId: o.customer_id || o.profiles?.id || '',
       customerName: o.customer_name || o.profiles?.full_name || 'Guest Diner',
-      tableNumber: o.restaurant_tables?.number || (o.table_id ? 4 : undefined),
+      tableNumber: o.restaurant_tables?.number || undefined,
       status: o.status as OrderStatus,
       total: Number(o.total),
       createdAt: o.created_at,
@@ -78,7 +78,7 @@ export const orderService = {
           onUpdate({
             id: raw.id,
             orderNumber: raw.order_number,
-            customerId: raw.customer_id || 'cust-1',
+            customerId: raw.customer_id || '',
             customerName: raw.customer_name || 'Guest Diner',
             tableNumber: raw.table_number,
             status: raw.status as OrderStatus,

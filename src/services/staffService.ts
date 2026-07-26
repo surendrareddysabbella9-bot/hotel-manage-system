@@ -35,7 +35,7 @@ export const staffService = {
           role: roleVal,
           status: 'active',
           avatarUrl: p.avatar_url,
-          shift: 'Evening (4 PM - 12 AM)',
+          shift: 'Evening Shift',
         };
       });
   },
@@ -49,32 +49,31 @@ export const staffService = {
 
     const roleId = roleData?.id;
 
-    if (roleId) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert({
-          role_id: roleId,
-          email: newStaff.email,
-          full_name: newStaff.fullName,
-        })
-        .select()
-        .single();
+    if (!roleId) {
+      throw new Error(`Role '${newStaff.role}' not found in database roles table.`);
+    }
 
-      if (!error && data) {
-        return {
-          id: data.id,
-          fullName: data.full_name,
-          email: data.email,
-          role: newStaff.role,
-          status: 'active',
-          shift: newStaff.shift,
-        };
-      }
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({
+        role_id: roleId,
+        email: newStaff.email,
+        full_name: newStaff.fullName,
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(error?.message || 'Failed to register staff profile in Supabase');
     }
 
     return {
-      id: `staff-${Date.now()}`,
-      ...newStaff,
+      id: data.id,
+      fullName: data.full_name,
+      email: data.email,
+      role: newStaff.role,
+      status: 'active',
+      shift: newStaff.shift,
     };
   },
 };

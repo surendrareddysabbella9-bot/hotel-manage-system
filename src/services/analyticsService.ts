@@ -28,7 +28,7 @@ export const analyticsService = {
 
     const orders = ordersRes.data || [];
     const orderItems = itemsRes.data || [];
-    const customerCount = custRes.data?.length || 1;
+    const customerCount = custRes.data?.length || 0;
 
     const totalRev = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
     const avgVal = orders.length > 0 ? totalRev / orders.length : 0;
@@ -59,14 +59,9 @@ export const analyticsService = {
       avgOrderValueChange: 3.8,
       turnoverRate: '42 min',
       turnoverChange: -5.1,
-      customerRetention: `${Math.min(95, Math.max(50, customerCount * 2))}%`,
+      customerRetention: `${Math.min(95, Math.max(0, customerCount * 2))}%`,
       customerRetentionChange: 8.4,
-      topDishes: sortedDishes.length > 0 ? sortedDishes : [
-        { name: 'Butter Chicken Special', orders: 142, revenue: '₹49,700.00' },
-        { name: 'Paneer Tikka Masala', orders: 110, revenue: '₹33,000.00' },
-        { name: 'Garlic Butter Naan', orders: 310, revenue: '₹18,600.00' },
-        { name: 'Gulab Jamun Platter', orders: 85, revenue: '₹12,750.00' },
-      ],
+      topDishes: sortedDishes,
     };
   },
 };

@@ -21,14 +21,12 @@ export const customerService = {
       throw new Error(error?.message || 'Failed to fetch customer profiles');
     }
 
-    return profiles.map((p, index: number) => {
+    return profiles.map((p) => {
       const orders = p.orders || [];
-      const totalOrders = orders.length > 0 ? orders.length : 3 + (index % 10);
-      const totalSpent = orders.length > 0
-        ? orders.reduce((sum: number, o: { total: number }) => sum + Number(o.total || 0), 0)
-        : 1250 + (index * 450);
+      const totalOrders = orders.length;
+      const totalSpent = orders.reduce((sum: number, o: { total: number }) => sum + Number(o.total || 0), 0);
 
-      const rawTier = p.loyalty_tier || (index % 3 === 0 ? 'Platinum' : index % 2 === 0 ? 'Gold' : 'Silver');
+      const rawTier = p.loyalty_tier;
       const loyaltyTier: 'Gold' | 'Silver' | 'Platinum' =
         rawTier === 'Platinum' ? 'Platinum' : rawTier === 'Gold' ? 'Gold' : 'Silver';
 
@@ -36,7 +34,7 @@ export const customerService = {
         id: p.id,
         name: p.full_name || 'Customer',
         email: p.email,
-        phone: p.phone || `+91 98765${(100 + index).toString().slice(-3)}`,
+        phone: p.phone || 'N/A',
         totalOrders,
         totalSpent,
         loyaltyTier,
