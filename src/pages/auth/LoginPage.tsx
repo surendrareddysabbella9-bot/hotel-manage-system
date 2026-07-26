@@ -1,41 +1,74 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { LogIn } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LogIn, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants";
 import { useAuth } from "@/app/providers/AuthContext";
+import type { UserRole } from "@/types";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { loginWithEmail, loginWithGoogle } = useAuth();
+
+  // Detect which portal login page is active
+  const pathname = location.pathname;
+  let targetPortal: "Customer" | "Admin" | "Staff" = "Customer";
+  let targetRole: UserRole = "customer";
+
+  if (pathname.includes("/admin")) {
+    targetPortal = "Admin";
+    targetRole = "admin";
+  } else if (pathname.includes("/staff")) {
+    targetPortal = "Staff";
+    targetRole = "staff";
+  }
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string>(
+    location.state?.message || ""
+  );
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!email) {
+
+    if (!email.trim()) {
       setErrorMsg("Please enter your email address.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const loggedUser = await loginWithEmail(email);
-      if (loggedUser.role === "admin") {
+      const loggedUser = await loginWithEmail(email, password);
+
+      // Verify user's role from profiles table against target portal requirement
+      if (loggedUser.role !== targetRole) {
+        setErrorMsg(
+          `You do not have permission to access the ${targetPortal} Portal.`
+        );
+        return;
+      }
+
+      // Navigate to portal home on successful authorization
+      if (targetRole === "admin") {
         navigate(ROUTES.admin.dashboard);
-      } else if (loggedUser.role === "staff") {
+      } else if (targetRole === "staff") {
         navigate(ROUTES.staff.kitchen);
       } else {
         navigate(ROUTES.customer.home);
       }
-    } catch {
-      setErrorMsg("Failed to authenticate. Please check your credentials.");
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "Invalid email or password. Please check your credentials."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -43,9 +76,19 @@ export function LoginPage() {
 
   return (
     <div className="space-y-6">
+      <div className="text-center space-y-1">
+        <h2 className="text-2xl font-bold tracking-tight">
+          {targetPortal} Portal Sign In
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Enter your account credentials to access the {targetPortal.toLowerCase()} console
+        </p>
+      </div>
+
       {errorMsg && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
-          {errorMsg}
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive flex items-center gap-2">
+          <ShieldAlert className="size-4 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -55,12 +98,13 @@ export function LoginPage() {
           <Input
             id="email"
             type="email"
-            placeholder="name@company.com"
+            placeholder="name@restaurantos.app"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
+
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <Label htmlFor="password">Password</Label>
@@ -81,8 +125,13 @@ export function LoginPage() {
           />
         </div>
 
-        <Button type="submit" className="w-full gap-2 font-semibold" disabled={isSubmitting}>
-          <LogIn className="size-4" /> {isSubmitting ? "Signing in..." : "Sign In"}
+        <Button
+          type="submit"
+          className="w-full gap-2 font-semibold"
+          disabled={isSubmitting}
+        >
+          <LogIn className="size-4" />{" "}
+          {isSubmitting ? "Authenticating..." : `Sign In to ${targetPortal}`}
         </Button>
       </form>
 
@@ -91,7 +140,9 @@ export function LoginPage() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
         </div>
       </div>
 
@@ -124,7 +175,10 @@ export function LoginPage() {
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link to={ROUTES.signup} className="font-medium text-foreground hover:underline">
+        <Link
+          to={ROUTES.signup}
+          className="font-medium text-foreground hover:underline"
+        >
           Sign up
         </Link>
       </p>

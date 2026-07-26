@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   role: UserRole;
   isLoading: boolean;
-  loginWithEmail: (email: string) => Promise<User>;
+  loginWithEmail: (email: string, password?: string) => Promise<User>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -19,7 +19,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Initial fetch from Supabase database
+    // Initial fetch from Supabase Auth & profiles table
     authService.getCurrentProfile().then((profile) => {
       if (profile) {
         setUser(profile);
@@ -29,11 +29,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     });
 
-    // Supabase Auth listener
+    // Listener for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
         const profile = await authService.getCurrentProfile();
         if (profile) setUser(profile);
+      } else {
+        setUser(null);
       }
     });
 
@@ -42,12 +44,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const loginWithEmail = async (email: string): Promise<User> => {
+  const loginWithEmail = async (email: string, password?: string): Promise<User> => {
     setIsLoading(true);
-    const u = await authService.loginWithEmail(email);
-    setUser(u);
-    setIsLoading(false);
-    return u;
+    try {
+      const u = await authService.loginWithEmailPassword(email, password);
+      setUser(u);
+      return u;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loginWithGoogle = async () => {
@@ -65,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
-        role: user?.role || 'admin',
+        role: user?.role || 'customer',
         isLoading,
         loginWithEmail,
         loginWithGoogle,

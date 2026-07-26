@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { ROUTES } from "@/constants";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import {
   AdminLayout,
   AuthLayout,
@@ -44,7 +45,7 @@ export const router = createBrowserRouter([
     element: <LandingPage />,
   },
 
-  // Customer Portal Logins & Auth Routes
+  // Auth Logins & Recovery
   {
     element: <AuthLayout />,
     children: [
@@ -57,10 +58,14 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // 1. Customer Portal Route Tree
+  // 1. Protected Customer Portal
   {
     path: "/customer",
-    element: <CustomerLayout />,
+    element: (
+      <ProtectedRoute allowedRole="customer" loginPath="/customer/login">
+        <CustomerLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <CustomerHomePage /> },
       { path: "menu", element: <DigitalMenuPage /> },
@@ -71,10 +76,14 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // 2. Admin Portal Route Tree
+  // 2. Protected Admin Portal
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute allowedRole="admin" loginPath="/admin/login">
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <Navigate to="/admin/dashboard" replace /> },
       { path: "dashboard", element: <AdminDashboardPage /> },
@@ -89,10 +98,14 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // 3. Staff Portal Route Tree
+  // 3. Protected Staff Portal
   {
     path: "/staff",
-    element: <StaffLayout />,
+    element: (
+      <ProtectedRoute allowedRole="staff" loginPath="/staff/login">
+        <StaffLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <Navigate to="/staff/kitchen" replace /> },
       { path: "kitchen", element: <KitchenDashboardPage /> },
