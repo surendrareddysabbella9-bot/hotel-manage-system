@@ -16,14 +16,12 @@ async function main() {
     `);
 
     // For existing users who don't have a security question, set a default one
-    // We will hash the answer "admin123" (or something standard) so they can test the reset flow
-    // In a real scenario, they would be prompted to set this on next login.
     const bcrypt = await import('bcrypt');
-    const defaultHash = await bcrypt.hash('password123', 10);
+    const defaultHash = await bcrypt.hash('butter chicken', 10);
     
     await pool.query(`
       UPDATE profiles 
-      SET security_question = 'What is the default recovery PIN?', 
+      SET security_question = 'What is the most loved item in our restaurant?', 
           security_answer_hash = $1
       WHERE security_question IS NULL;
     `, [defaultHash]);
