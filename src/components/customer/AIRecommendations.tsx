@@ -4,6 +4,7 @@ import { aiService } from "@/services/aiService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMenu } from "@/hooks/useMenu";
 
 interface AIRecommendationsProps {
   cart: any[];
@@ -13,6 +14,7 @@ interface AIRecommendationsProps {
 export function AIRecommendations({ cart, onAdd }: AIRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { items: allMenuItems } = useMenu();
 
   useEffect(() => {
     if (cart.length === 0) {
@@ -55,10 +57,40 @@ export function AIRecommendations({ cart, onAdd }: AIRecommendationsProps) {
       </div>
       
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-xl" />
-          ))}
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground animate-pulse">Generating personalized recommendations...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {allMenuItems
+              .filter(item => !cart.find(c => c.menuItemId === item.id))
+              .slice(0, 3)
+              .map((item) => (
+                <Card key={item.id} className="overflow-hidden border-border opacity-70 hover:opacity-100 transition-opacity">
+                  <CardContent className="p-3 flex items-center gap-3 bg-muted/30">
+                    {item.imageUrl && (
+                      <img src={item.imageUrl} alt={item.name} className="size-12 rounded-md object-cover" />
+                    )}
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold line-clamp-1">{item.name}</h4>
+                      <p className="text-xs font-medium text-muted-foreground">₹{Number(item.price).toFixed(2)}</p>
+                    </div>
+                    <Button 
+                      size="icon" 
+                      variant="secondary"
+                      className="size-8 rounded-full shadow-sm"
+                      onClick={() => onAdd({
+                        id: item.id,
+                        menuItemId: item.id,
+                        name: item.name,
+                        price: Number(item.price),
+                        imageUrl: item.imageUrl
+                      })}
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
         </div>
       ) : recommendations.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
