@@ -10,6 +10,27 @@ const apiKey = process.env.GEMINI_API_KEY;
 // Create an instance of the Google Generative AI client
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
+// Helper to gracefully fallback models on 503 (High Demand) errors
+async function generateWithRetry(genAI, prompt) {
+  const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+  let lastError = null;
+
+  for (const modelName of models) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      return await model.generateContent(prompt);
+    } catch (err) {
+      lastError = err;
+      if (err.status === 503) {
+        console.warn(`[AI Fallback] ${modelName} returned 503, trying next model...`);
+        continue;
+      }
+      throw err; 
+    }
+  }
+  throw lastError; 
+}
+
 router.post('/recommend', async (req, res) => {
   if (!genAI) {
     return res.status(503).json({ error: 'AI features are not configured on the server.' });
@@ -41,7 +62,7 @@ router.post('/recommend', async (req, res) => {
       Example: ["id-1", "id-2", "id-3"]
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithRetry(genAI, prompt);
     let text = result.response.text().trim();
     
     // Extract JSON array
@@ -101,7 +122,7 @@ router.get('/analytics', async (req, res) => {
       }
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithRetry(genAI, prompt);
     let text = result.response.text().trim();
     
     // Extract JSON object
@@ -153,7 +174,7 @@ router.post('/chat-order', async (req, res) => {
       Do not use markdown blocks like \`\`\`json. Just raw JSON.
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithRetry(genAI, prompt);
     let text = result.response.text().trim();
     
     // Extract JSON object
@@ -213,7 +234,7 @@ router.post('/autocomplete', async (req, res) => {
       Return ONLY a raw JSON array of 3 string suggestions. Example: ["Spicy Chicken", "Chicken Biryani", "Butter Chicken"]
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithRetry(genAI, prompt);
     let text = result.response.text().trim();
     
     const jsonMatch = text.match(/\[[\s\S]*\]/);
