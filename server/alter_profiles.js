@@ -28,9 +28,10 @@ async function main() {
       WHERE security_question IS NULL OR security_question = 'What is the name of your first pet?' OR security_question = 'What is the default recovery PIN?';
     `, [defaultHash]);
     
-    // Ensure Staff and Admin demo users exist with correct roles
+    // Ensure Staff, Admin, and Customer demo users exist with correct roles
     const staffHash = await bcrypt.hash('Staff@123', 10);
     const adminHash = await bcrypt.hash('Admin@123', 10);
+    const customerHash = await bcrypt.hash('Laddu@123', 10);
 
     const staffRole = await pool.query("SELECT id FROM roles WHERE name ILIKE 'Waiter'");
     if (staffRole.rows.length > 0) {
@@ -55,6 +56,19 @@ async function main() {
         );
       } else {
         await pool.query("UPDATE profiles SET role_id = $1 WHERE email = 'admin@gmail.com'", [adminRole.rows[0].id]);
+      }
+    }
+
+    const customerRole = await pool.query("SELECT id FROM roles WHERE name ILIKE 'Customer'");
+    if (customerRole.rows.length > 0) {
+      const customerRes = await pool.query("SELECT id FROM profiles WHERE email = 'anilreddysbs@gmail.com'");
+      if (customerRes.rows.length === 0) {
+        await pool.query(
+          "INSERT INTO profiles (role_id, email, full_name, password_hash, security_question, security_answer_hash) VALUES ($1, $2, $3, $4, $5, $6)", 
+          [customerRole.rows[0].id, 'anilreddysbs@gmail.com', 'Anil Reddy', customerHash, 'What is the most loved item in our restaurant?', defaultHash]
+        );
+      } else {
+        await pool.query("UPDATE profiles SET role_id = $1 WHERE email = 'anilreddysbs@gmail.com'", [customerRole.rows[0].id]);
       }
     }
     
