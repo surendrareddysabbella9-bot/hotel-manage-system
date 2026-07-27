@@ -24,9 +24,6 @@ export function AuthLayout({
       
       <div className="hidden w-1/2 flex-col justify-between bg-card p-12 lg:flex">
         <div>
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <span className="text-lg font-bold">R</span>
-          </div>
           <h2 className="mt-12 text-3xl font-semibold tracking-tight text-balance">
             Intelligent Restaurant Management
           </h2>
