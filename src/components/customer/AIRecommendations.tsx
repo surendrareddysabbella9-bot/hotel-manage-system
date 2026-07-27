@@ -3,7 +3,6 @@ import { Sparkles, Plus } from "lucide-react";
 import { aiService } from "@/services/aiService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useMenu } from "@/hooks/useMenu";
 
 interface AIRecommendationsProps {
