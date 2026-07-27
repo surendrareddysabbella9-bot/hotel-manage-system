@@ -122,12 +122,15 @@ router.get('/:table/:id', async (req, res) => {
 // Custom POST for full order (with items)
 router.post('/orders/create-full', async (req, res) => {
   try {
-    const { order_number, customer_name, table_id, order_type, subtotal, tax, total, items } = req.body;
+    const { order_number, table_id, order_type, subtotal, tax, total, items } = req.body;
     
+    const customer_id = req.user?.id || null;
+    const customer_name = req.user?.fullName || 'Guest Diner';
+
     const orderRes = await pool.query(
-      `INSERT INTO orders (order_number, customer_name, table_id, order_type, status, subtotal, tax, total) 
-       VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7) RETURNING *`,
-      [order_number, customer_name, table_id, order_type, subtotal, tax, total]
+      `INSERT INTO orders (order_number, customer_id, customer_name, table_id, order_type, status, subtotal, tax, total) 
+       VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8) RETURNING *`,
+      [order_number, customer_id, customer_name, table_id, order_type, subtotal, tax, total]
     );
     const newOrder = orderRes.rows[0];
 
@@ -155,6 +158,23 @@ router.post('/:table', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
+    // --- RBAC SECURITY LAYER ---
+    const userRole = req.user.role;
+    const userId = req.user.id;
+
+    if (userRole === 'customer') {
+      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles', 'restaurant_tables', 'menu_items', 'menu_categories'];
+      if (restrictedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Access denied to write to internal tables' });
+      }
+      
+      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback'];
+      if (customerScopedTables.includes(table)) {
+        req.body.customer_id = userId; // Force customer ownership on generic insert
+      }
+    }
+    // --- END RBAC ---
+
     const keys = Object.keys(req.body);
     const values = Object.values(req.body);
     
@@ -181,6 +201,27 @@ router.patch('/:table/:id', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
+    // --- RBAC SECURITY LAYER ---
+    const userRole = req.user.role;
+    const userId = req.user.id;
+
+    if (userRole === 'customer') {
+      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles', 'restaurant_tables', 'menu_items', 'menu_categories'];
+      if (restrictedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Access denied to update internal tables' });
+      }
+      
+      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];
+      if (customerScopedTables.includes(table)) {
+        const idCol = table === 'profiles' ? 'id' : 'customer_id';
+        const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND ${idCol} = $2`, [id, userId]);
+        if (checkRes.rows.length === 0) {
+          return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
+        }
+      }
+    }
+    // --- END RBAC ---
+
     const keys = Object.keys(req.body);
     const values = Object.values(req.body);
     
@@ -241,6 +282,26 @@ router.delete('/:table/:id', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
+    // --- RBAC SECURITY LAYER ---
+    const userRole = req.user.role;
+    const userId = req.user.id;
+
+    if (userRole === 'customer') {
+      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles', 'restaurant_tables', 'menu_items', 'menu_categories'];
+      if (restrictedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Access denied to delete internal tables' });
+      }
+      
+      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback'];
+      if (customerScopedTables.includes(table)) {
+        const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND customer_id = $2`, [id, userId]);
+        if (checkRes.rows.length === 0) {
+          return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
+        }
+      }
+    }
+    // --- END RBAC ---
+
     const result = await pool.query(`DELETE FROM ${table} WHERE id = $1 RETURNING *`, [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     
