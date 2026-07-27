@@ -32,10 +32,10 @@ export const authService = {
     }
   },
 
-  async signUp(email: string, password: string, fullName: string, role: UserRole): Promise<User> {
+  async signUp(email: string, password: string, fullName: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<User> {
     const response = await apiFetch('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ email, password, fullName, role })
+      body: JSON.stringify({ email, password, fullName, role, securityQuestion, securityAnswer })
     });
     
     // Store token
@@ -61,4 +61,19 @@ export const authService = {
   async logout(): Promise<void> {
     localStorage.removeItem('token');
   },
+
+  async forgotPassword(email: string): Promise<{ question: string }> {
+    const response = await apiFetch('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+    return response;
+  },
+
+  async resetPassword(email: string, answer: string, newPassword: string): Promise<void> {
+    await apiFetch('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, answer, newPassword })
+    });
+  }
 };

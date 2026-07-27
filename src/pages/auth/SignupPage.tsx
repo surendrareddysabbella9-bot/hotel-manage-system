@@ -9,6 +9,14 @@ import { ROUTES } from "@/constants";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import { useAuth } from "@/app/providers/AuthContext";
 
+const SECURITY_QUESTIONS = [
+  "What is the name of your first pet?",
+  "In what city were you born?",
+  "What is your mother's maiden name?",
+  "What was the model of your first car?",
+  "What was the name of your elementary school?",
+];
+
 export function SignupPage() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -16,6 +24,8 @@ export function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [securityQuestion, setSecurityQuestion] = useState(SECURITY_QUESTIONS[0]);
+  const [securityAnswer, setSecurityAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -23,7 +33,7 @@ export function SignupPage() {
     e.preventDefault();
     setErrorMsg("");
 
-    if (!email || !password || !fullName) {
+    if (!email || !password || !fullName || !securityQuestion || !securityAnswer) {
       setErrorMsg("Please fill in all required fields.");
       return;
     }
@@ -35,7 +45,7 @@ export function SignupPage() {
 
     setIsSubmitting(true);
     try {
-      await signUp(email, password, fullName, "customer");
+      await signUp(email, password, fullName, "customer", securityQuestion, securityAnswer);
 
       // Navigate to the correct login portal with a success message.
       // We do NOT go directly to the portal because the auth session
@@ -108,6 +118,33 @@ export function SignupPage() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="space-y-2 pt-2 border-t border-border">
+          <Label htmlFor="securityQuestion">Security Question (For Password Reset)</Label>
+          <select
+            id="securityQuestion"
+            value={securityQuestion}
+            onChange={(e) => setSecurityQuestion(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            required
+          >
+            {SECURITY_QUESTIONS.map((q) => (
+              <option key={q} value={q}>{q}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="securityAnswer">Answer</Label>
+          <Input
+            id="securityAnswer"
+            type="text"
+            placeholder="Your answer"
+            value={securityAnswer}
+            onChange={(e) => setSecurityAnswer(e.target.value)}
             required
           />
         </div>

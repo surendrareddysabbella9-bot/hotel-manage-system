@@ -21,8 +21,8 @@ export function FoodCard({ item, onAddToCart, className }: FoodCardProps) {
       transition={{ duration: 0.2 }}
       className={cn("group", className)}
     >
-      <Card className="overflow-hidden">
-        <div className="relative aspect-[4/3] overflow-hidden">
+      <Card className="overflow-hidden bg-background/60 backdrop-blur-xl border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="relative h-48 overflow-hidden">
           <img
             src={item.imageUrl}
             alt={item.name}
@@ -59,7 +59,7 @@ export function FoodCard({ item, onAddToCart, className }: FoodCardProps) {
         </CardContent>
         <CardFooter className="p-4 pt-0">
           <Button
-            className="w-full gap-2"
+            className="w-full gap-2 bg-primary/90 hover:bg-primary backdrop-blur-sm shadow-sm"
             disabled={!item.available}
             onClick={() => onAddToCart?.(item)}
           >

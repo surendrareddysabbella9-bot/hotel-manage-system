@@ -83,7 +83,10 @@ export function DigitalMenuPage() {
   const totalCartPrice = cart.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="relative min-h-screen space-y-6 pb-20 pt-4">
+      {/* Subtle background gradient to make glassmorphism pop */}
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
+      
       <PageHeader
         title="Digital Menu"
         description="Explore our chef-crafted dishes and handcrafted beverages"

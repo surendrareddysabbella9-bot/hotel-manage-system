@@ -10,7 +10,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
-  const { email, password, fullName, role } = req.body;
+  const { email, password, fullName, role, securityQuestion, securityAnswer } = req.body;
 
   try {
     // 1. Check if user already exists
@@ -37,12 +37,16 @@ router.post('/signup', async (req, res) => {
     }
     const roleId = roleRes.rows[0].id;
 
-    // 4. Insert into profiles (Assuming we added a password_hash column to profiles)
-    // For a real migration from Supabase, you must ALTER TABLE profiles ADD COLUMN password_hash VARCHAR(255);
+    // 4. Insert into profiles
+    let securityAnswerHash = null;
+    if (securityAnswer) {
+      securityAnswerHash = await bcrypt.hash(securityAnswer.toLowerCase().trim(), 10);
+    }
+
     const insertRes = await pool.query(
-      `INSERT INTO profiles (role_id, email, full_name, password_hash) 
-       VALUES ($1, $2, $3, $4) RETURNING id, email, full_name, created_at`,
-      [roleId, email, fullName, passwordHash]
+      `INSERT INTO profiles (role_id, email, full_name, password_hash, security_question, security_answer_hash) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, full_name, created_at`,
+      [roleId, email, fullName, passwordHash, securityQuestion || null, securityAnswerHash]
     );
 
     const user = insertRes.rows[0];
@@ -111,6 +115,65 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error during login' });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const userRes = await pool.query('SELECT security_question FROM profiles WHERE email = $1', [email]);
+    if (userRes.rows.length === 0) {
+      // Return generic success to prevent email enumeration, or specific error depending on strictness
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    const question = userRes.rows[0].security_question;
+    if (!question) {
+      return res.status(400).json({ error: 'No security question set for this account' });
+    }
+
+    res.json({ question });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  const { email, answer, newPassword } = req.body;
+  if (!email || !answer || !newPassword) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const userRes = await pool.query('SELECT id, security_answer_hash FROM profiles WHERE email = $1', [email]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    const user = userRes.rows[0];
+    if (!user.security_answer_hash) {
+      return res.status(400).json({ error: 'No security question configured' });
+    }
+
+    // Verify answer
+    const validAnswer = await bcrypt.compare(answer.toLowerCase().trim(), user.security_answer_hash);
+    if (!validAnswer) {
+      return res.status(401).json({ error: 'Incorrect answer to security question' });
+    }
+
+    // Update password
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE profiles SET password_hash = $1 WHERE id = $2', [passwordHash, user.id]);
+
+    res.json({ success: true, message: 'Password has been reset successfully' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
