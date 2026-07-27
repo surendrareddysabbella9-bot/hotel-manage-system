@@ -14,8 +14,8 @@ export function CustomerLogin() {
   const location = useLocation();
   const { loginWithEmail, user, logout } = useAuth();
 
-  const [email, setEmail] = useState<string>(location.state?.prefillEmail || "");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>(location.state?.prefillEmail || "anilreddysbs@gmail.com");
+  const [password, setPassword] = useState("Laddu@123");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg] = useState<string>(location.state?.successMessage || "");
   const [errorMsg, setErrorMsg] = useState<string>("");
