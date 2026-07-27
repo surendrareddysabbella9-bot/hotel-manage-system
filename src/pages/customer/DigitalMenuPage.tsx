@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, ShoppingBag, Filter, Check } from "lucide-react";
+import { Search, ShoppingBag, Filter, Check, Sparkles, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ROUTES } from "@/constants";
+import { apiFetch } from "@/lib/api";
 import { useMenu } from "@/hooks/useMenu";
 import { useCart } from "@/hooks/useCart";
 import type { MenuItem } from "@/types";
@@ -21,6 +22,42 @@ export function DigitalMenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("all");
+
+  // AI Predictive Search States
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Debounced predictive search effect
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsPredicting(true);
+      try {
+        const res = await apiFetch('/ai/autocomplete', {
+          method: 'POST',
+          body: JSON.stringify({ query: searchQuery })
+        });
+        if (res.suggestions && res.suggestions.length > 0) {
+          setSuggestions(res.suggestions);
+          setShowSuggestions(true);
+        } else {
+          setShowSuggestions(false);
+        }
+      } catch (err) {
+        console.error('Autocomplete failed', err);
+      } finally {
+        setIsPredicting(false);
+      }
+    }, 1000); // 1-second debounce to save Gemini tokens!
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const tags = ["all", "signature", "vegetarian", "seafood", "gluten-free", "bestseller", "spicy"];
 
@@ -61,8 +98,38 @@ export function DigitalMenuPage() {
             placeholder="Search dishes or ingredients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             className="pl-9"
           />
+          
+          {/* AI Suggestions Dropdown */}
+          {(showSuggestions || isPredicting) && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 overflow-hidden flex flex-col">
+              <div className="px-3 py-2 text-xs font-semibold text-primary bg-primary/5 border-b flex items-center gap-1">
+                <Sparkles className="size-3" />
+                AI Suggestions
+              </div>
+              {isPredicting ? (
+                <div className="p-3 text-sm text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" /> Predicting...
+                </div>
+              ) : (
+                suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    className="px-3 py-2 text-sm text-left hover:bg-muted transition-colors"
+                    onClick={() => {
+                      setSearchQuery(s);
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {/* Category Pills */}

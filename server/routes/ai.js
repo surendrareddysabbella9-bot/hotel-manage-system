@@ -22,6 +22,9 @@ router.post('/recommend', async (req, res) => {
     const menuRes = await pool.query(`SELECT id, name, category_id, price FROM menu_items WHERE available = true`);
     const menuItems = menuRes.rows;
 
+    // Token optimization: Only send necessary fields to AI
+    const optimizedMenu = menuItems.map(m => ({ id: m.id, name: m.name }));
+
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
@@ -30,7 +33,7 @@ router.post('/recommend', async (req, res) => {
       ${JSON.stringify(cartItems, null, 2)}
       
       Here is our current menu:
-      ${JSON.stringify(menuItems, null, 2)}
+      ${JSON.stringify(optimizedMenu, null, 2)}
 
       Based on their cart, recommend 3 add-on items from the menu that pair well. 
       Do NOT recommend items already in their cart.
@@ -124,6 +127,9 @@ router.post('/chat-order', async (req, res) => {
     const menuRes = await pool.query(`SELECT id, name, price, image_url FROM menu_items WHERE available = true`);
     const menuItems = menuRes.rows;
 
+    // Token optimization
+    const optimizedMenu = menuItems.map(m => ({ id: m.id, name: m.name }));
+
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
@@ -131,7 +137,7 @@ router.post('/chat-order', async (req, res) => {
       The user just said: "${message}"
 
       Here is the available menu:
-      ${JSON.stringify(menuItems, null, 2)}
+      ${JSON.stringify(optimizedMenu, null, 2)}
 
       Analyze the user's intent. If they want to order specific items, find the closest matching items from the menu.
       Extract the items they want and their quantities.
@@ -179,6 +185,45 @@ router.post('/chat-order', async (req, res) => {
   } catch (error) {
     console.error('Agentic Chatbot Error:', error);
     res.status(500).json({ error: error.message || 'Failed to process chat request' });
+  }
+});
+
+router.post('/autocomplete', async (req, res) => {
+  if (!genAI) {
+    return res.status(503).json({ error: 'AI features are not configured.' });
+  }
+
+  try {
+    const { query } = req.body;
+    if (!query || query.length < 2) return res.json({ suggestions: [] });
+
+    // Fetch simplified menu for context
+    const menuRes = await pool.query(`SELECT name, tags FROM menu_items WHERE available = true`);
+    const optimizedMenu = menuRes.rows.map(m => ({ name: m.name, tags: m.tags }));
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `
+      You are a predictive search engine for a restaurant. 
+      The user is typing: "${query}"
+
+      Menu context:
+      ${JSON.stringify(optimizedMenu)}
+
+      Predict exactly 3 relevant menu items or short search queries they might be looking for. 
+      Return ONLY a raw JSON array of 3 string suggestions. Example: ["Spicy Chicken", "Chicken Biryani", "Butter Chicken"]
+    `;
+
+    const result = await model.generateContent(prompt);
+    let text = result.response.text().trim();
+    
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("No JSON array found");
+
+    const suggestions = JSON.parse(jsonMatch[0]);
+    res.json({ suggestions });
+  } catch (error) {
+    console.error('AI Autocomplete Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate suggestions' });
   }
 });
 

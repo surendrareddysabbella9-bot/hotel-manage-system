@@ -35,6 +35,30 @@ router.get('/:table', async (req, res) => {
     
     // Very basic filtering (e.g. ?status=pending)
     const filters = Object.entries(req.query).filter(([k]) => k !== 'order' && k !== 'limit');
+    
+    // --- RBAC SECURITY LAYER ---
+    const userRole = req.user.role;
+    const userId = req.user.id;
+
+    if (userRole === 'customer') {
+      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
+      if (restrictedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Access denied to internal tables' });
+      }
+      
+      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];
+      if (customerScopedTables.includes(table)) {
+        if (table === 'profiles') {
+          // A customer can only query their own profile
+          filters.push(['id', userId]);
+        } else {
+          // A customer can only see rows belonging to them
+          filters.push(['customer_id', userId]);
+        }
+      }
+    }
+    // --- END RBAC ---
+
     if (filters.length > 0) {
       const conditions = filters.map(([key, val], index) => {
         values.push(val);
@@ -65,6 +89,28 @@ router.get('/:table/:id', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
+    // --- RBAC SECURITY LAYER ---
+    const userRole = req.user.role;
+    const userId = req.user.id;
+
+    if (userRole === 'customer') {
+      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
+      if (restrictedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Access denied to internal tables' });
+      }
+      
+      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];
+      if (customerScopedTables.includes(table)) {
+        const idCol = table === 'profiles' ? 'id' : 'customer_id';
+        // Ensure the row belongs to the customer before returning it
+        const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND ${idCol} = $2`, [id, userId]);
+        if (checkRes.rows.length === 0) {
+          return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
+        }
+      }
+    }
+    // --- END RBAC ---
+
     const result = await pool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(result.rows[0]);
