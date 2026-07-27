@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, Mail, Phone, Award, ShoppingBag, ShieldCheck, Save } from "lucide-react";
+import { User, Mail, Phone, Award, ShoppingBag, ShieldCheck, Save, Target } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -73,6 +73,18 @@ export function CustomerProfilePage() {
     }
   };
 
+  const getTierProgress = (points: number, currentTier: string) => {
+    if (currentTier === 'Bronze' || points <= 500) {
+      return { percentage: Math.min((points / 500) * 100, 100), nextTier: 'Silver', pointsNeeded: 501 - points };
+    }
+    if (currentTier === 'Silver' || points <= 2000) {
+      return { percentage: Math.min(((points - 500) / 1500) * 100, 100), nextTier: 'Gold', pointsNeeded: 2001 - points };
+    }
+    return { percentage: 100, nextTier: 'Max Tier Reached', pointsNeeded: 0 };
+  };
+
+  const progress = getTierProgress(loyaltyPoints, loyaltyTier);
+
   return (
     <div className="relative min-h-screen space-y-8 max-w-4xl mx-auto pb-16 pt-4">
       {/* Background gradient for glassmorphism */}
@@ -109,6 +121,25 @@ export function CustomerProfilePage() {
                 <span className="font-semibold uppercase tracking-wider text-[10px]">Reward Points</span>
               </div>
               <span className="font-bold text-lg">{loyaltyPoints}</span>
+            </div>
+
+            {/* Progress to next tier */}
+            <div className="pt-2 space-y-2">
+              <div className="flex justify-between items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                <span>{loyaltyTier}</span>
+                <span>{progress.nextTier}</span>
+              </div>
+              <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary rounded-full transition-all duration-1000"
+                  style={{ width: `${progress.percentage}%` }}
+                />
+              </div>
+              {progress.pointsNeeded > 0 && (
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Earn <span className="font-bold text-foreground">{progress.pointsNeeded}</span> more points to reach {progress.nextTier}!
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

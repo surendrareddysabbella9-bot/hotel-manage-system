@@ -16,9 +16,11 @@ import { useTables } from "@/hooks/useTables";
 import { AIRecommendations } from "@/components/customer/AIRecommendations";
 import { useCart } from "@/hooks/useCart";
 import { orderService } from "@/services/orderService";
+import { useAuth } from "@/app/providers/AuthContext";
 
 export function CartPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { tables, isLoading } = useTables();
   const { cart, updateQuantity, removeItem, addToCart, clearCart } = useCart();
 
@@ -28,7 +30,7 @@ export function CartPage() {
   const [orderType, setOrderType] = useState<"dine_in" | "takeout">("dine_in");
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(30);
 
   const availableTables = tables.filter((t) => t.status === "available");
 
@@ -59,7 +61,7 @@ export function CartPage() {
   const handleCheckout = async () => {
     setPaymentStatus("processing");
     setIsSubmitting(true);
-    setTimeLeft(15);
+    setTimeLeft(30);
     
     // We will handle the countdown in a useEffect or inside the modal component.
     // For simplicity, we just trigger the modal state and let the user click "Simulate Scan" or wait.
@@ -74,7 +76,8 @@ export function CartPage() {
     try {
       const orderPayload = {
         order_number: "ORD-" + Math.floor(1000 + Math.random() * 9000),
-        customer_name: "Guest Diner",
+        customer_id: user?.id || null, // pass the customer ID so points are awarded
+        customer_name: user?.fullName || "Guest Diner",
         table_id: orderType === 'dine_in' ? selectedTableId : null,
         order_type: orderType,
         subtotal,
@@ -335,11 +338,18 @@ export function CartPage() {
             </div>
           ) : (
             <div className="space-y-4 py-8">
-              <CheckCircle2 className="size-16 text-success mx-auto" />
+              <CheckCircle2 className="size-16 text-emerald-500 mx-auto" />
               <DialogTitle className="text-xl">Payment Successful!</DialogTitle>
               <p className="text-sm text-muted-foreground mt-2">
                 Your order has been placed. Redirecting to tracking...
               </p>
+              {user && (
+                <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                  <p className="text-amber-800 text-sm font-semibold">
+                    🎉 You earned {Math.floor(total / 10)} Loyalty Points!
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

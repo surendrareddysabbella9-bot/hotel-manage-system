@@ -12,6 +12,13 @@ import type { OrderStatus } from "@/types";
 export function KitchenDashboardPage() {
   const { orders, isLoading, updateOrderStatus } = useOrders();
 
+  // Filter out orders older than 12 hours to keep KDS clean for the current shift
+  const activeShiftOrders = orders.filter((o) => {
+    const orderDate = new Date(o.createdAt);
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    return orderDate >= twelveHoursAgo;
+  });
+
   const advanceOrderStatus = async (orderId: string, currentStatus: OrderStatus) => {
     const nextStatusMap: Record<OrderStatus, OrderStatus> = {
       pending: "cooking",
@@ -65,8 +72,8 @@ export function KitchenDashboardPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-4">
           {KITCHEN_COLUMNS.map((col) => {
-            // Filter orders for this column
-            let colOrders = orders.filter((o) => o.status === col.id);
+            // Filter orders for this column using only active shift orders
+            let colOrders = activeShiftOrders.filter((o) => o.status === col.id);
             
             // Limit 'served' orders to recent 10 to avoid clutter
             if (col.id === 'served') {
