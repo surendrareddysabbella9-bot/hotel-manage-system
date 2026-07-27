@@ -68,8 +68,8 @@ export function KitchenDashboardPage() {
             // Filter orders for this column
             let colOrders = orders.filter((o) => o.status === col.id);
             
-            // Limit 'served' or 'cancelled' orders to recent 10 to avoid clutter
-            if (col.id === 'served' || col.id === 'cancelled') {
+            // Limit 'served' orders to recent 10 to avoid clutter
+            if (col.id === 'served') {
               colOrders = colOrders.slice(0, 10);
             }
 
