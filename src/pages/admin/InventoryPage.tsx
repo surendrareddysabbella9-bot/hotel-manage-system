@@ -13,13 +13,20 @@ import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useInventory } from "@/hooks/useInventory";
+import { useAuth } from "@/app/providers/AuthContext";
 import type { InventoryItem } from "@/types";
 
 export function InventoryPage() {
-  const { inventory, lowStockCount, isLoading, error, isEmpty, refetch, restockItem } = useInventory();
+  const { inventory, lowStockCount, isLoading, error, isEmpty, refetch, restockItem, updateItem } = useInventory();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [restockAmount, setRestockAmount] = useState("10");
+
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editThreshold, setEditThreshold] = useState("0");
 
   const filteredInventory = inventory.filter((i) =>
     i.name.toLowerCase().includes(search.toLowerCase()) || i.category.toLowerCase().includes(search.toLowerCase())
@@ -31,6 +38,25 @@ export function InventoryPage() {
     const addQty = parseFloat(restockAmount) || 0;
     await restockItem(selectedItem.id, addQty);
     setSelectedItem(null);
+  };
+
+  const openEditDialog = (item: InventoryItem) => {
+    setEditingItem(item);
+    setEditName(item.name);
+    setEditCategory(item.category);
+    setEditThreshold(item.minThreshold.toString());
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    
+    await updateItem(editingItem.id, {
+      name: editName,
+      category: editCategory,
+      minThreshold: parseFloat(editThreshold) || 0,
+    });
+    setEditingItem(null);
   };
 
   const columns: DataTableColumn<InventoryItem>[] = [
@@ -51,9 +77,16 @@ export function InventoryPage() {
       key: "id",
       header: "Action",
       render: (i) => (
-        <Button size="sm" variant="outline" onClick={() => setSelectedItem(i)}>
-          Restock
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setSelectedItem(i)}>
+            Restock
+          </Button>
+          {user?.role === "admin" && (
+            <Button size="sm" variant="secondary" onClick={() => openEditDialog(i)}>
+              Edit
+            </Button>
+          )}
+        </div>
       ),
     },
   ];
@@ -122,6 +155,54 @@ export function InventoryPage() {
 
               <DialogFooter>
                 <Button type="submit" className="w-full">Confirm Restock</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+        {editingItem && (
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit {editingItem.name}</DialogTitle>
+              <DialogDescription>
+                Update item details and stock thresholds.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4 py-3">
+              <div className="space-y-2">
+                <Label htmlFor="editName">Name</Label>
+                <Input
+                  id="editName"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editCategory">Category</Label>
+                <Input
+                  id="editCategory"
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editThreshold">Min Threshold ({editingItem.unit})</Label>
+                <Input
+                  id="editThreshold"
+                  type="number"
+                  value={editThreshold}
+                  onChange={(e) => setEditThreshold(e.target.value)}
+                  required
+                />
+              </div>
+
+              <DialogFooter>
+                <Button type="submit" className="w-full">Save Changes</Button>
               </DialogFooter>
             </form>
           </DialogContent>

@@ -68,6 +68,26 @@ export function useInventory() {
     }
   };
 
+  const updateInventoryItem = async (id: string, updates: Partial<InventoryItem>) => {
+    // Optimistic UI update
+    setInventory((prev) =>
+      prev.map((i) =>
+        i.id === id
+          ? {
+              ...i,
+              ...updates,
+            }
+          : i
+      )
+    );
+
+    try {
+      await inventoryService.updateItem(id, updates);
+    } catch {
+      fetchInventory();
+    }
+  };
+
   const lowStockCount = inventory.filter((i) => i.status !== 'in_stock').length;
   const isEmpty = !isLoading && inventory.length === 0;
 
@@ -80,5 +100,6 @@ export function useInventory() {
     isEmpty,
     refetch: fetchInventory,
     restockItem: restock,
+    updateItem: updateInventoryItem,
   };
 }

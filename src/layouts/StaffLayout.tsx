@@ -14,7 +14,7 @@ export function StaffLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
   const { orders } = useOrders();
-  const { notifications } = useNotifications();
+  const { notifications, markAllAsRead } = useNotifications();
 
   const kitchenOrdersCount = orders.filter((o) => o.status === "cooking" || o.status === "pending").length;
 
@@ -38,6 +38,7 @@ export function StaffLayout() {
       <Navbar
         user={currentUser}
         notifications={notifications}
+        onClearNotifications={markAllAsRead}
         onMenuToggle={() => setSidebarOpen((prev) => !prev)}
         sidebarOpen={sidebarOpen}
       />

@@ -36,11 +36,18 @@ router.get('/:table', async (req, res) => {
     // Very basic filtering (e.g. ?status=pending)
     const filters = Object.entries(req.query).filter(([k]) => k !== 'order' && k !== 'limit');
     
-    // --- RBAC SECURITY LAYER ---
+    // --- STRICT RBAC SECURITY LAYER ---
     const userRole = req.user.role;
     const userId = req.user.id;
 
-    if (userRole === 'customer') {
+    if (userRole === 'admin') {
+      // Admins have unrestricted GET access
+    } else if (userRole === 'staff') {
+      const restrictedTables = ['profiles', 'roles', 'daily_sales', 'staff_activity', 'payments'];
+      if (restrictedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Staff cannot access this internal table' });
+      }
+    } else if (userRole === 'customer') {
       const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
       if (restrictedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Access denied to internal tables' });
@@ -49,13 +56,13 @@ router.get('/:table', async (req, res) => {
       const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];
       if (customerScopedTables.includes(table)) {
         if (table === 'profiles') {
-          // A customer can only query their own profile
           filters.push(['id', userId]);
         } else {
-          // A customer can only see rows belonging to them
           filters.push(['customer_id', userId]);
         }
       }
+    } else {
+      return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
     }
     // --- END RBAC ---
 
@@ -89,11 +96,18 @@ router.get('/:table/:id', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
-    // --- RBAC SECURITY LAYER ---
+    // --- STRICT RBAC SECURITY LAYER ---
     const userRole = req.user.role;
     const userId = req.user.id;
 
-    if (userRole === 'customer') {
+    if (userRole === 'admin') {
+      // Admins have unrestricted GET access
+    } else if (userRole === 'staff') {
+      const restrictedTables = ['profiles', 'roles', 'daily_sales', 'staff_activity', 'payments'];
+      if (restrictedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Staff cannot access this internal table' });
+      }
+    } else if (userRole === 'customer') {
       const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
       if (restrictedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Access denied to internal tables' });
@@ -102,12 +116,13 @@ router.get('/:table/:id', async (req, res) => {
       const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];
       if (customerScopedTables.includes(table)) {
         const idCol = table === 'profiles' ? 'id' : 'customer_id';
-        // Ensure the row belongs to the customer before returning it
         const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND ${idCol} = $2`, [id, userId]);
         if (checkRes.rows.length === 0) {
           return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
         }
       }
+    } else {
+      return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
     }
     // --- END RBAC ---
 
@@ -158,20 +173,25 @@ router.post('/:table', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
-    // --- RBAC SECURITY LAYER ---
+    // --- STRICT RBAC SECURITY LAYER ---
     const userRole = req.user.role;
     const userId = req.user.id;
 
-    if (userRole === 'customer') {
-      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles', 'restaurant_tables', 'menu_items', 'menu_categories'];
-      if (restrictedTables.includes(table)) {
-        return res.status(403).json({ error: 'Forbidden: Access denied to write to internal tables' });
+    if (userRole === 'admin') {
+      // Unrestricted
+    } else if (userRole === 'staff') {
+      const allowedTables = ['orders', 'reservations', 'inventory_logs', 'staff_activity', 'order_items'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Staff cannot write to this table' });
       }
-      
-      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback'];
-      if (customerScopedTables.includes(table)) {
-        req.body.customer_id = userId; // Force customer ownership on generic insert
+    } else if (userRole === 'customer') {
+      const allowedTables = ['orders', 'reservations', 'payments', 'feedback'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Customers cannot write to this table' });
       }
+      req.body.customer_id = userId; // Force customer ownership
+    } else {
+      return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
     }
     // --- END RBAC ---
 
@@ -201,24 +221,30 @@ router.patch('/:table/:id', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
-    // --- RBAC SECURITY LAYER ---
+    // --- STRICT RBAC SECURITY LAYER ---
     const userRole = req.user.role;
     const userId = req.user.id;
 
-    if (userRole === 'customer') {
-      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles', 'restaurant_tables', 'menu_items', 'menu_categories'];
-      if (restrictedTables.includes(table)) {
-        return res.status(403).json({ error: 'Forbidden: Access denied to update internal tables' });
+    if (userRole === 'admin') {
+      // Unrestricted
+    } else if (userRole === 'staff') {
+      const allowedTables = ['orders', 'reservations', 'inventory', 'restaurant_tables'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Staff cannot update this table' });
+      }
+    } else if (userRole === 'customer') {
+      const allowedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Customers cannot update this table' });
       }
       
-      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];
-      if (customerScopedTables.includes(table)) {
-        const idCol = table === 'profiles' ? 'id' : 'customer_id';
-        const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND ${idCol} = $2`, [id, userId]);
-        if (checkRes.rows.length === 0) {
-          return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
-        }
+      const idCol = table === 'profiles' ? 'id' : 'customer_id';
+      const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND ${idCol} = $2`, [id, userId]);
+      if (checkRes.rows.length === 0) {
+        return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
       }
+    } else {
+      return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
     }
     // --- END RBAC ---
 
@@ -282,23 +308,26 @@ router.delete('/:table/:id', async (req, res) => {
   if (!/^[a-z_]+$/.test(table)) return res.status(400).json({ error: 'Invalid table name' });
 
   try {
-    // --- RBAC SECURITY LAYER ---
+    // --- STRICT RBAC SECURITY LAYER ---
     const userRole = req.user.role;
     const userId = req.user.id;
 
-    if (userRole === 'customer') {
-      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles', 'restaurant_tables', 'menu_items', 'menu_categories'];
-      if (restrictedTables.includes(table)) {
-        return res.status(403).json({ error: 'Forbidden: Access denied to delete internal tables' });
+    if (userRole === 'admin') {
+      // Unrestricted
+    } else if (userRole === 'staff') {
+      return res.status(403).json({ error: 'Forbidden: Staff cannot delete records' });
+    } else if (userRole === 'customer') {
+      const allowedTables = ['orders', 'reservations'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Customers cannot delete from this table' });
       }
       
-      const customerScopedTables = ['orders', 'reservations', 'payments', 'feedback'];
-      if (customerScopedTables.includes(table)) {
-        const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND customer_id = $2`, [id, userId]);
-        if (checkRes.rows.length === 0) {
-          return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
-        }
+      const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND customer_id = $2`, [id, userId]);
+      if (checkRes.rows.length === 0) {
+        return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
       }
+    } else {
+      return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
     }
     // --- END RBAC ---
 

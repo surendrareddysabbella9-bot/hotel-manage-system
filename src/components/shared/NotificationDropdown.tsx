@@ -14,6 +14,7 @@ import type { Notification } from "@/types";
 
 interface NotificationDropdownProps {
   notifications: Notification[];
+  onClearAll?: () => void;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ const typeStyles: Record<Notification["type"], string> = {
 
 export function NotificationDropdown({
   notifications,
+  onClearAll,
   className,
 }: NotificationDropdownProps) {
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -48,7 +50,22 @@ export function NotificationDropdown({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+        <div className="flex items-center justify-between px-2">
+          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+          {unreadCount > 0 && onClearAll && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClearAll();
+              }}
+              className="h-8 text-xs px-2 text-muted-foreground hover:text-foreground"
+            >
+              Clear All
+            </Button>
+          )}
+        </div>
         <DropdownMenuSeparator />
         {notifications.length === 0 ? (
           <div className="px-2 py-6 text-center text-sm text-muted-foreground">

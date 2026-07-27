@@ -18,7 +18,7 @@ export function AdminLayout() {
   const { orders } = useOrders();
   const { lowStockCount } = useInventory();
   const { reservations } = useReservations();
-  const { notifications } = useNotifications();
+  const { notifications, markAllAsRead } = useNotifications();
 
   const activeOrdersCount = orders.filter((o) => o.status !== "served" && o.status !== "cancelled").length;
   const activeReservationsCount = reservations.filter((r) => r.status === "confirmed").length;
@@ -49,6 +49,7 @@ export function AdminLayout() {
       <Navbar
         user={currentUser}
         notifications={notifications}
+        onClearNotifications={markAllAsRead}
         onMenuToggle={() => setSidebarOpen((prev) => !prev)}
         sidebarOpen={sidebarOpen}
       />

@@ -13,7 +13,7 @@ import type { User } from "@/types";
 export function CustomerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
-  const { notifications } = useNotifications();
+  const { notifications, markAllAsRead } = useNotifications();
 
   const currentUser: User = user || {
     id: "cust-1",
@@ -28,6 +28,7 @@ export function CustomerLayout() {
       <Navbar
         user={currentUser}
         notifications={notifications}
+        onClearNotifications={markAllAsRead}
         onMenuToggle={() => setSidebarOpen((prev) => !prev)}
         sidebarOpen={sidebarOpen}
       />

@@ -58,6 +58,23 @@ export const inventoryService = {
     }
   },
 
+  async updateItem(id: string, updates: Partial<InventoryItem>): Promise<boolean> {
+    try {
+      const payload: any = { updated_at: new Date().toISOString() };
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.category !== undefined) payload.category = updates.category;
+      if (updates.minThreshold !== undefined) payload.min_threshold = updates.minThreshold;
+      
+      await apiFetch(`/inventory/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   subscribeToInventory(onUpdate: (item: InventoryItem) => void) {
     let isPolling = true;
     let lastKnownQuantities: Record<string, number> = {};

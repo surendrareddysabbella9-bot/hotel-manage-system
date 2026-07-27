@@ -12,6 +12,7 @@ import type { Notification, User } from "@/types";
 interface NavbarProps {
   user: User;
   notifications: Notification[];
+  onClearNotifications?: () => void;
   showSearch?: boolean;
   onMenuToggle?: () => void;
   sidebarOpen?: boolean;
@@ -21,6 +22,7 @@ interface NavbarProps {
 export function Navbar({
   user,
   notifications,
+  onClearNotifications,
   showSearch = true,
   onMenuToggle,
   sidebarOpen,
@@ -63,7 +65,7 @@ export function Navbar({
       )}
 
       <div className="ml-auto flex items-center gap-1">
-        <NotificationDropdown notifications={notifications} />
+        <NotificationDropdown notifications={notifications} onClearAll={onClearNotifications} />
         <ProfileDropdown user={user} />
       </div>
     </header>
