@@ -9,7 +9,9 @@ import {
   StaffLayout,
 } from "@/layouts";
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
-import { LoginPage } from "@/pages/auth/LoginPage";
+import { CustomerLogin } from "@/pages/auth/CustomerLogin";
+import { AdminLogin } from "@/pages/auth/AdminLogin";
+import { StaffLogin } from "@/pages/auth/StaffLogin";
 import { SignupPage } from "@/pages/auth/SignupPage";
 import {
   AdminDashboardPage,
@@ -45,14 +47,16 @@ export const router = createBrowserRouter([
     element: <LandingPage />,
   },
 
-  // Auth Logins & Recovery
+  // Distinct Login Pages (No shared AuthLayout to allow custom full-screen designs)
+  { path: "/customer/login", element: <CustomerLogin /> },
+  { path: "/admin/login", element: <AdminLogin /> },
+  { path: "/staff/login", element: <StaffLogin /> },
+  { path: ROUTES.login, element: <CustomerLogin /> },
+
+  // Auth Logins & Recovery (Shared Layout)
   {
     element: <AuthLayout />,
     children: [
-      { path: "/customer/login", element: <LoginPage /> },
-      { path: "/admin/login", element: <LoginPage /> },
-      { path: "/staff/login", element: <LoginPage /> },
-      { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.signup, element: <SignupPage /> },
       { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
     ],

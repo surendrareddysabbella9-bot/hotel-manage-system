@@ -11,10 +11,16 @@ export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      setSubmitted(true);
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setSubmitted(true);
+      }, 1500);
     }
   };
 
@@ -44,8 +50,8 @@ export function ForgotPasswordPage() {
               required
             />
           </div>
-          <Button type="submit" className="w-full">
-            Send reset link
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Sending..." : "Send reset link"}
           </Button>
         </form>
       )}

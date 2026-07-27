@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, CreditCard } from "lucide-react";
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, CreditCard, Loader2, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -25,6 +26,7 @@ export function CartPage() {
   const [discount, setDiscount] = useState(0);
   const [selectedTableId, setSelectedTableId] = useState<string>("");
   const [orderType, setOrderType] = useState<"dine_in" | "takeout">("dine_in");
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const availableTables = tables.filter((t) => t.status === "available");
@@ -54,7 +56,16 @@ export function CartPage() {
   };
 
   const handleCheckout = async () => {
+    setPaymentStatus("processing");
     setIsSubmitting(true);
+    
+    // Simulate payment gateway delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setPaymentStatus("success");
+    
+    // Wait for user to see the success checkmark
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     try {
       const orderPayload = {
         order_number: "ORD-" + Math.floor(1000 + Math.random() * 9000),
@@ -76,9 +87,11 @@ export function CartPage() {
 
       await orderService.createOrder(orderPayload);
       clearCart();
+      setPaymentStatus("idle");
       navigate(ROUTES.customer.tracking);
     } catch (err) {
       console.error("Failed to checkout", err);
+      setPaymentStatus("idle");
     } finally {
       setIsSubmitting(false);
     }
@@ -272,6 +285,29 @@ export function CartPage() {
           </div>
         </div>
       )}
+
+      {/* Mock Payment Modal */}
+      <Dialog open={paymentStatus !== "idle"} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md flex flex-col items-center justify-center py-10 text-center">
+          {paymentStatus === "processing" ? (
+            <>
+              <Loader2 className="size-16 text-primary animate-spin mb-4" />
+              <DialogTitle className="text-xl">Processing Payment...</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Securely connecting to payment gateway. Please do not close this window.
+              </p>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="size-16 text-success mb-4" />
+              <DialogTitle className="text-xl">Payment Successful!</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Redirecting to order tracking...
+              </p>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
