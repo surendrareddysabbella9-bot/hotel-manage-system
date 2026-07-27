@@ -43,9 +43,12 @@ router.get('/:table', async (req, res) => {
     if (userRole === 'admin') {
       // Admins have unrestricted GET access
     } else if (userRole === 'staff') {
-      const restrictedTables = ['profiles', 'roles', 'daily_sales', 'staff_activity', 'payments'];
+      const restrictedTables = ['roles', 'daily_sales', 'staff_activity', 'payments'];
       if (restrictedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Staff cannot access this internal table' });
+      }
+      if (table === 'profiles') {
+        filters.push(['id', userId]);
       }
     } else if (userRole === 'customer') {
       const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
@@ -103,9 +106,12 @@ router.get('/:table/:id', async (req, res) => {
     if (userRole === 'admin') {
       // Admins have unrestricted GET access
     } else if (userRole === 'staff') {
-      const restrictedTables = ['profiles', 'roles', 'daily_sales', 'staff_activity', 'payments'];
+      const restrictedTables = ['roles', 'daily_sales', 'staff_activity', 'payments'];
       if (restrictedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Staff cannot access this internal table' });
+      }
+      if (table === 'profiles' && id !== userId) {
+        return res.status(403).json({ error: 'Forbidden: Profile does not belong to you' });
       }
     } else if (userRole === 'customer') {
       const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
@@ -228,9 +234,15 @@ router.patch('/:table/:id', async (req, res) => {
     if (userRole === 'admin') {
       // Unrestricted
     } else if (userRole === 'staff') {
-      const allowedTables = ['orders', 'reservations', 'inventory', 'restaurant_tables'];
+      const allowedTables = ['orders', 'reservations', 'inventory', 'restaurant_tables', 'profiles'];
       if (!allowedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Staff cannot update this table' });
+      }
+      if (table === 'profiles') {
+        const checkRes = await pool.query(`SELECT 1 FROM ${table} WHERE id = $1 AND id = $2`, [id, userId]);
+        if (checkRes.rows.length === 0) {
+          return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
+        }
       }
     } else if (userRole === 'customer') {
       const allowedTables = ['orders', 'reservations', 'payments', 'feedback', 'profiles'];

@@ -8,9 +8,9 @@ export const orderService = {
     const ordersData = await apiFetch('/orders?order=created_at.desc');
     
     // 2. We have to manually fetch related data since we lost Supabase joins
-    const itemsData = await apiFetch('/order_items');
-    const profilesData = await apiFetch('/profiles');
-    const tablesData = await apiFetch('/restaurant_tables');
+    const itemsData = await apiFetch('/order_items').catch(() => []);
+    const profilesData = await apiFetch('/profiles').catch(() => []);
+    const tablesData = await apiFetch('/restaurant_tables').catch(() => []);
 
     return ordersData.map((o: any) => {
       // Manual joins

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { AlertTriangle, Search } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/PageHeader";
-import { InventoryCard } from "@/components/cards/InventoryCard";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,15 +119,9 @@ export function InventoryPage() {
       ) : isEmpty ? (
         <EmptyState title="No inventory items found" description="There are currently no raw ingredients in stock." />
       ) : (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredInventory.map((item) => (
-              <InventoryCard key={item.id} item={item} />
-            ))}
-          </div>
-
+        <div className="rounded-md border bg-card">
           <DataTable data={filteredInventory} columns={columns} keyExtractor={(i) => i.id} />
-        </>
+        </div>
       )}
 
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>

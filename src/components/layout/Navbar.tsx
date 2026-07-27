@@ -13,7 +13,6 @@ interface NavbarProps {
   user: User;
   notifications: Notification[];
   onClearNotifications?: () => void;
-  showSearch?: boolean;
   onMenuToggle?: () => void;
   sidebarOpen?: boolean;
   className?: string;
@@ -23,7 +22,6 @@ export function Navbar({
   user,
   notifications,
   onClearNotifications,
-  showSearch = true,
   onMenuToggle,
   sidebarOpen,
   className,
@@ -57,12 +55,6 @@ export function Navbar({
         </div>
         <span className="hidden sm:inline">{APP_NAME}</span>
       </Link>
-
-      {showSearch && (
-        <div className="hidden flex-1 md:flex md:justify-center">
-          <GlobalSearch />
-        </div>
-      )}
 
       <div className="ml-auto flex items-center gap-1">
         <NotificationDropdown notifications={notifications} onClearAll={onClearNotifications} />

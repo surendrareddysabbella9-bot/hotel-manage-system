@@ -14,7 +14,6 @@ export function SignupPage() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
-  const [role, setRole] = useState<UserRole>("customer");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,17 +36,12 @@ export function SignupPage() {
 
     setIsSubmitting(true);
     try {
-      await signUp(email, password, fullName, role);
+      await signUp(email, password, fullName, "customer");
 
       // Navigate to the correct login portal with a success message.
       // We do NOT go directly to the portal because the auth session
       // may not be fully loaded yet, causing ProtectedRoute to block.
-      const loginPath =
-        role === "admin"
-          ? ROUTES.admin.login
-          : role === "staff"
-          ? ROUTES.staff.login
-          : ROUTES.customer.login;
+      const loginPath = ROUTES.customer.login;
 
       navigate(loginPath, {
         state: {
@@ -117,20 +111,6 @@ export function SignupPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="role">Register As</Label>
-          <select
-            id="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus:ring-1 focus:ring-ring"
-          >
-            <option value="customer">Customer (Diner)</option>
-            <option value="staff">Staff (Kitchen / Waiter)</option>
-            <option value="admin">Admin / Manager</option>
-          </select>
         </div>
 
         <Button type="submit" className="w-full gap-2 font-semibold" disabled={isSubmitting}>

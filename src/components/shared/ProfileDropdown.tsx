@@ -26,6 +26,12 @@ export function ProfileDropdown({
   settingsHref = ROUTES.admin.settings,
   className,
 }: ProfileDropdownProps) {
+  const profilePath =
+    user.role === "admin"
+      ? "/admin/profile"
+      : user.role === "staff"
+      ? "/staff/profile"
+      : ROUTES.customer.profile;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,8 +55,8 @@ export function ProfileDropdown({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to={ROUTES.customer.profile} className="cursor-pointer">
-            <User className="size-4" />
+          <Link to={profilePath} className="cursor-pointer">
+            <User className="mr-2 size-4" />
             Profile
           </Link>
         </DropdownMenuItem>

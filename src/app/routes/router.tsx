@@ -95,6 +95,7 @@ export const router = createBrowserRouter([
       { path: "staff", element: <StaffManagementPage /> },
       { path: "analytics", element: <AnalyticsPage /> },
       { path: "settings", element: <SettingsPage /> },
+      { path: "profile", element: <CustomerProfilePage /> },
     ],
   },
 
@@ -112,6 +113,7 @@ export const router = createBrowserRouter([
       { path: "orders", element: <StaffOrdersPage /> },
       { path: "tables", element: <TableManagementPage /> },
       { path: "inventory", element: <InventoryPage /> },
+      { path: "profile", element: <CustomerProfilePage /> },
     ],
   },
 
