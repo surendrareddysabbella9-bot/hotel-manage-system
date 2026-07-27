@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { NotificationDropdown } from "@/components/shared/NotificationDropdown";
 import { ProfileDropdown } from "@/components/shared/ProfileDropdown";
-import { SearchBar } from "@/components/shared/SearchBar";
+import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { APP_NAME } from "@/constants";
 import { cn } from "@/lib/utils";
@@ -58,7 +58,7 @@ export function Navbar({
 
       {showSearch && (
         <div className="hidden flex-1 md:flex md:justify-center">
-          <SearchBar placeholder="Search orders, menu, tables…" />
+          <GlobalSearch />
         </div>
       )}
 

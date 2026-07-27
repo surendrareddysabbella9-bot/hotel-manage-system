@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
 import aiRoutes from './routes/ai.js';
 import apiRoutes from './routes/api.js';
+import searchRoutes from './routes/search.js';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/search', searchRoutes);
 app.use('/api', apiRoutes);
 
 // Serve static frontend in production
