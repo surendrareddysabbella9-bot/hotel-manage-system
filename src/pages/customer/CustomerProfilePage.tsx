@@ -166,34 +166,32 @@ export function CustomerProfilePage() {
         </Card>
       </div>
 
-      {/* Order History (Only for Customers) */}
-      {user?.role === "customer" && (
-        <div className="space-y-4">
-          <h3 className="text-base font-semibold flex items-center gap-2">
-            <ShoppingBag className="size-4 text-primary" /> Order History ({orders.length})
-          </h3>
-          {isOrdersLoading ? (
-            <LoadingSkeleton variant="table" count={3} />
-          ) : (
-            <div className="space-y-3">
-              {orders.map((order) => (
-                <Card key={order.id} className="p-4 flex items-center justify-between text-xs">
-                  <div>
-                    <p className="font-semibold text-sm">Order #{order.orderNumber}</p>
-                    <p className="text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()} · {order.items.length} items</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={order.status === "served" ? "success" : "warning"} className="capitalize mb-1">
-                      {order.status}
-                    </Badge>
-                    <p className="font-bold text-sm">₹{order.total.toFixed(2)}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Order History */}
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold flex items-center gap-2">
+          <ShoppingBag className="size-4 text-primary" /> Order History ({orders.length})
+        </h3>
+        {isOrdersLoading ? (
+          <LoadingSkeleton variant="table" count={3} />
+        ) : (
+          <div className="space-y-3">
+            {orders.map((order) => (
+              <Card key={order.id} className="p-4 flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-semibold text-sm">Order #{order.orderNumber}</p>
+                  <p className="text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()} · {order.items.length} items</p>
+                </div>
+                <div className="text-right">
+                  <Badge variant={order.status === "served" ? "success" : "warning"} className="capitalize mb-1">
+                    {order.status}
+                  </Badge>
+                  <p className="font-bold text-sm">₹{order.total.toFixed(2)}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
