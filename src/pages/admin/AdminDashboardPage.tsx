@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, Sparkles, Loader2, Download } from "lucide-react";
+import { AlertTriangle, ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
