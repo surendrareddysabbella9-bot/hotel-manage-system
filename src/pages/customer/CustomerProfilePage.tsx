@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, Mail, Phone, Award, ShoppingBag, ShieldCheck, Save, Target } from "lucide-react";
+import { User, Mail, Phone, Award, ShoppingBag, ShieldCheck, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
