@@ -10,5 +10,11 @@ export const aiService = {
 
   async getAnalytics() {
     return apiFetch('/ai/analytics');
+  },
+
+  async generateEodReport() {
+    return apiFetch('/ai/eod-report', {
+      method: 'POST'
+    });
   }
 };

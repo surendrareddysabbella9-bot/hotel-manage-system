@@ -21,8 +21,8 @@ export function FoodCard({ item, onAddToCart, className }: FoodCardProps) {
       transition={{ duration: 0.2 }}
       className={cn("group h-full", className)}
     >
-      <Card className="h-full flex flex-col overflow-hidden bg-background/60 backdrop-blur-xl border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <div className="relative h-48 shrink-0 overflow-hidden">
+      <Card className="h-full flex flex-col md:flex-row overflow-hidden bg-background/60 backdrop-blur-xl border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="relative h-48 md:h-auto md:w-2/5 shrink-0 overflow-hidden">
           <img
             src={item.imageUrl}
             alt={item.name}
@@ -42,31 +42,33 @@ export function FoodCard({ item, onAddToCart, className }: FoodCardProps) {
             {item.available ? "Available" : "Unavailable"}
           </Badge>
         </div>
-        <CardContent className="space-y-2 p-4 flex-1 flex flex-col">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold leading-tight">{item.name}</h3>
-            <span className="shrink-0 font-semibold text-primary">
-              {formatCurrency(item.price)}
-            </span>
-          </div>
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {item.description}
-          </p>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-auto pt-2">
-            <Clock className="size-3.5" aria-hidden="true" />
-            <span>{item.preparationTime} min prep</span>
-          </div>
-        </CardContent>
-        <CardFooter className="p-4 pt-0 shrink-0">
-          <Button
-            className="w-full gap-2 bg-primary/90 hover:bg-primary backdrop-blur-sm shadow-sm"
-            disabled={!item.available}
-            onClick={() => onAddToCart?.(item)}
-          >
-            <Plus className="size-4" />
-            Add to Cart
-          </Button>
-        </CardFooter>
+        <div className="flex-1 flex flex-col md:w-3/5">
+          <CardContent className="space-y-2 p-4 flex-1 flex flex-col">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-semibold leading-tight">{item.name}</h3>
+              <span className="shrink-0 font-semibold text-primary">
+                {formatCurrency(item.price)}
+              </span>
+            </div>
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {item.description}
+            </p>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-auto pt-2">
+              <Clock className="size-3.5" aria-hidden="true" />
+              <span>{item.preparationTime} min prep</span>
+            </div>
+          </CardContent>
+          <CardFooter className="p-4 pt-0 shrink-0">
+            <Button
+              className="w-full gap-2 bg-primary/90 hover:bg-primary backdrop-blur-sm shadow-sm"
+              disabled={!item.available}
+              onClick={() => onAddToCart?.(item)}
+            >
+              <Plus className="size-4" />
+              Add to Cart
+            </Button>
+          </CardFooter>
+        </div>
       </Card>
     </motion.article>
   );

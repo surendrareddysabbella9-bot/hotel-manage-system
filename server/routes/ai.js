@@ -248,4 +248,55 @@ router.post('/autocomplete', async (req, res) => {
   }
 });
 
+router.post('/eod-report', async (req, res) => {
+  if (!genAI) {
+    return res.status(503).json({ error: 'AI features are not configured.' });
+  }
+
+  try {
+    // Fetch today's orders
+    const ordersRes = await pool.query(`
+      SELECT o.status, o.total, o.created_at, oi.name as item_name, oi.quantity
+      FROM orders o
+      JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.created_at >= CURRENT_DATE
+    `);
+
+    // Fetch current inventory
+    const inventoryRes = await pool.query(`
+      SELECT name, quantity, unit, min_threshold
+      FROM inventory
+    `);
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const prompt = `
+      You are an expert restaurant operations manager.
+      Analyze the following data from TODAY and write a professional End-of-Day (EOD) Executive Summary.
+
+      Today's Orders:
+      ${JSON.stringify(ordersRes.rows)}
+      
+      Current Inventory:
+      ${JSON.stringify(inventoryRes.rows)}
+
+      Write a comprehensive Markdown report with the following sections:
+      - **Daily Performance Overview** (Total revenue today, order volume)
+      - **Top Performing Items** (What sold the most today)
+      - **Inventory & Stock Alerts** (What needs to be restocked tomorrow)
+      - **Operational Insights** (Any patterns or recommendations)
+
+      Do NOT output raw JSON. Output beautifully formatted Markdown text. Keep it professional, concise, and highly actionable.
+    `;
+
+    const result = await generateWithRetry(genAI, prompt);
+    let reportText = result.response.text().trim();
+    
+    res.json({ report: reportText });
+  } catch (error) {
+    console.error('AI EOD Report Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate EOD report' });
+  }
+});
+
 export default router;

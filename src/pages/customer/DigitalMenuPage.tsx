@@ -178,7 +178,7 @@ export function DigitalMenuPage() {
       {isLoading ? (
         <LoadingSkeleton variant="card" count={6} />
       ) : filteredItems.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-2">
           {filteredItems.map((item) => (
             <FoodCard key={item.id} item={item} onAddToCart={handleAddToCart} />
           ))}

@@ -65,7 +65,14 @@ export function KitchenDashboardPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-4">
           {KITCHEN_COLUMNS.map((col) => {
-            const colOrders = orders.filter((o) => o.status === col.id);
+            // Filter orders for this column
+            let colOrders = orders.filter((o) => o.status === col.id);
+            
+            // Limit 'served' or 'cancelled' orders to recent 10 to avoid clutter
+            if (col.id === 'served' || col.id === 'cancelled') {
+              colOrders = colOrders.slice(0, 10);
+            }
+
             return (
               <div key={col.id} className="space-y-4">
                 <div className="flex items-center justify-between border-b border-border pb-3">

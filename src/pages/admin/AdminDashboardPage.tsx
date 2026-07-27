@@ -1,5 +1,6 @@
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, Sparkles, Loader2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { StatisticsCard } from "@/components/shared/StatisticsCard";
@@ -13,10 +14,29 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ROUTES } from "@/constants";
 import { useDashboard } from "@/hooks/useDashboard";
+import { aiService } from "@/services/aiService";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { Order } from "@/types";
 
 export function AdminDashboardPage() {
   const { data, isLoading, error, isEmpty, refetch } = useDashboard();
+  const [eodReport, setEodReport] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleGenerateEod = async () => {
+    setIsModalOpen(true);
+    setIsGenerating(true);
+    try {
+      const res = await aiService.generateEodReport();
+      setEodReport(res.report);
+    } catch (err) {
+      console.error(err);
+      setEodReport("Failed to generate report. Please check AI integration.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const columns: DataTableColumn<Order>[] = [
     { key: "orderNumber", header: "Order #", render: (o) => `#${o.orderNumber}` },
@@ -83,10 +103,41 @@ export function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Executive Overview"
-        description="Real-time operational summary and key restaurant metrics"
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <PageHeader
+          title="Executive Overview"
+          description="Real-time operational summary and key restaurant metrics"
+        />
+        <Button onClick={handleGenerateEod} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20">
+          <Sparkles className="size-4" />
+          Generate EOD Report
+        </Button>
+      </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Sparkles className="size-5 text-indigo-600" /> AI End-of-Day Executive Summary
+            </DialogTitle>
+            <DialogDescription>
+              Automatically generated analysis of today's operations using Google Gemini.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {isGenerating ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4 text-muted-foreground">
+                <Loader2 className="size-10 animate-spin text-indigo-600" />
+                <p>Analyzing today's sales, inventory, and operational data...</p>
+              </div>
+            ) : eodReport ? (
+              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap font-mono text-sm p-4 bg-muted/30 rounded-lg">
+                {eodReport}
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
