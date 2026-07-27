@@ -54,12 +54,14 @@ export function ProfileDropdown({
             Profile
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to={settingsHref} className="cursor-pointer">
-            <Settings className="size-4" />
-            Settings
-          </Link>
-        </DropdownMenuItem>
+        {user.role === "admin" && (
+          <DropdownMenuItem asChild>
+            <Link to={settingsHref} className="cursor-pointer">
+              <Settings className="size-4" />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to={ROUTES.login} className="cursor-pointer text-destructive">
