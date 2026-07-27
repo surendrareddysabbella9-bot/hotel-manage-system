@@ -11,6 +11,13 @@ import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { useAuth } from "@/app/providers/AuthContext";
 import { useOrders } from "@/hooks/useOrders";
 import { apiFetch } from "@/lib/api";
+import { cn } from "@/lib/utils";
+
+const TIER_COLORS: Record<string, string> = {
+  Bronze: "text-orange-500 bg-orange-500/10 border-orange-500/20",
+  Silver: "text-slate-400 bg-slate-400/10 border-slate-400/20",
+  Gold: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20 shadow-yellow-500/20 shadow-lg",
+};
 
 export function CustomerProfilePage() {
   const { user } = useAuth();
@@ -67,7 +74,10 @@ export function CustomerProfilePage() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto pb-16">
+    <div className="relative min-h-screen space-y-8 max-w-4xl mx-auto pb-16 pt-4">
+      {/* Background gradient for glassmorphism */}
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
+      
       <PageHeader
         title="Your Dining Profile"
         description="Manage your account preferences, view order history, and check loyalty points"
@@ -75,35 +85,36 @@ export function CustomerProfilePage() {
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Profile Card */}
-        <Card className="md:col-span-1">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary mb-2">
+        <Card className="md:col-span-1 overflow-hidden bg-background/60 backdrop-blur-xl border-border/40 shadow-lg">
+          <CardHeader className="text-center pb-2 relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+            <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-background border-2 border-primary/20 text-primary mb-2 shadow-sm relative z-10">
               <User className="size-10" />
             </div>
-            <CardTitle className="text-lg font-bold">{fullName || "Valued Diner"}</CardTitle>
-            <p className="text-xs text-muted-foreground">{email}</p>
+            <CardTitle className="text-lg font-bold relative z-10">{fullName || "Valued Diner"}</CardTitle>
+            <p className="text-xs text-muted-foreground relative z-10">{email}</p>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4 border-t border-border text-xs">
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+          <CardContent className="space-y-4 pt-4 border-t border-border/50 text-xs">
+            <div className={cn("flex items-center justify-between p-3 rounded-lg border", TIER_COLORS[loyaltyTier] || TIER_COLORS.Bronze)}>
               <div className="flex items-center gap-2">
-                <Award className="size-4 text-warning" />
-                <span className="font-semibold">Loyalty Status</span>
+                <Award className="size-4" />
+                <span className="font-semibold uppercase tracking-wider text-[10px]">Loyalty Tier</span>
               </div>
-              <Badge variant="warning">{loyaltyTier} Member</Badge>
+              <span className="font-bold text-sm">{loyaltyTier}</span>
             </div>
 
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/10 text-primary">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-primary" />
-                <span className="font-semibold">Reward Points</span>
+                <ShieldCheck className="size-4" />
+                <span className="font-semibold uppercase tracking-wider text-[10px]">Reward Points</span>
               </div>
-              <span className="font-bold text-sm text-primary">{loyaltyPoints} pts</span>
+              <span className="font-bold text-lg">{loyaltyPoints}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Edit Personal Information Form */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 bg-background/60 backdrop-blur-xl border-border/40 shadow-lg">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Personal Information</CardTitle>
           </CardHeader>

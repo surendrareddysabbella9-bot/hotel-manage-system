@@ -163,6 +163,29 @@ router.post('/orders/create-full', async (req, res) => {
       );
     }
 
+    // Update loyalty points
+    if (customer_id) {
+      const earnedPoints = Math.floor(total / 10);
+      try {
+        const userRes = await pool.query('SELECT loyalty_points FROM profiles WHERE id = $1', [customer_id]);
+        if (userRes.rows.length > 0) {
+          const currentPoints = userRes.rows[0].loyalty_points || 0;
+          const newPoints = currentPoints + earnedPoints;
+          
+          let tier = 'Bronze';
+          if (newPoints > 2000) tier = 'Gold';
+          else if (newPoints > 500) tier = 'Silver';
+
+          await pool.query(
+            'UPDATE profiles SET loyalty_points = $1, loyalty_tier = $2 WHERE id = $3',
+            [newPoints, tier, customer_id]
+          );
+        }
+      } catch (tierErr) {
+        console.error('Failed to update loyalty tier', tierErr);
+      }
+    }
+
     if (req.io) {
       req.io.emit('orders_created', newOrder);
     }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, CreditCard, Loader2, CheckCircle2 } from "lucide-react";
 
@@ -28,6 +28,7 @@ export function CartPage() {
   const [orderType, setOrderType] = useState<"dine_in" | "takeout">("dine_in");
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15);
 
   const availableTables = tables.filter((t) => t.status === "available");
 
@@ -58,9 +59,13 @@ export function CartPage() {
   const handleCheckout = async () => {
     setPaymentStatus("processing");
     setIsSubmitting(true);
+    setTimeLeft(15);
     
-    // Simulate payment gateway delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // We will handle the countdown in a useEffect or inside the modal component.
+    // For simplicity, we just trigger the modal state and let the user click "Simulate Scan" or wait.
+  };
+
+  const processPaymentSuccess = async () => {
     setPaymentStatus("success");
     
     // Wait for user to see the success checkmark
@@ -96,6 +101,16 @@ export function CartPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Timer for auto-payment success (15 seconds)
+  useEffect(() => {
+    if (paymentStatus === "processing" && timeLeft > 0) {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId);
+    } else if (paymentStatus === "processing" && timeLeft === 0) {
+      processPaymentSuccess();
+    }
+  }, [paymentStatus, timeLeft]);
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16">
@@ -288,23 +303,44 @@ export function CartPage() {
 
       {/* Mock Payment Modal */}
       <Dialog open={paymentStatus !== "idle"} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md flex flex-col items-center justify-center py-10 text-center">
+        <DialogContent className="sm:max-w-md flex flex-col items-center justify-center py-8 text-center bg-background/80 backdrop-blur-xl border-border/40 shadow-2xl">
           {paymentStatus === "processing" ? (
-            <>
-              <Loader2 className="size-16 text-primary animate-spin mb-4" />
-              <DialogTitle className="text-xl">Processing Payment...</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-2">
-                Securely connecting to payment gateway. Please do not close this window.
-              </p>
-            </>
+            <div className="space-y-6 w-full flex flex-col items-center">
+              <DialogTitle className="text-xl">Scan to Pay ₹{total.toFixed(2)}</DialogTitle>
+              <div className="p-4 bg-white rounded-xl shadow-inner border">
+                {/* Mock QR Code using a public API to generate it based on total */}
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=pay_mock_${total}`} 
+                  alt="Payment QR Code"
+                  className="size-48"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Waiting for payment...</p>
+                <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs">
+                  <Loader2 className="size-3 animate-spin" />
+                  <span>Auto-confirming in {timeLeft}s</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t w-full flex flex-col gap-2">
+                <Button onClick={processPaymentSuccess} className="w-full bg-primary/90 hover:bg-primary gap-2">
+                  <CheckCircle2 className="size-4" /> Simulate Scan
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => { setPaymentStatus("idle"); setIsSubmitting(false); }}>
+                  Cancel Payment
+                </Button>
+              </div>
+            </div>
           ) : (
-            <>
-              <CheckCircle2 className="size-16 text-success mb-4" />
+            <div className="space-y-4 py-8">
+              <CheckCircle2 className="size-16 text-success mx-auto" />
               <DialogTitle className="text-xl">Payment Successful!</DialogTitle>
               <p className="text-sm text-muted-foreground mt-2">
-                Redirecting to order tracking...
+                Your order has been placed. Redirecting to tracking...
               </p>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>

@@ -10,6 +10,7 @@ import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import { useAuth } from "@/app/providers/AuthContext";
 
 const SECURITY_QUESTIONS = [
+  "What is the most loved item in our restaurant?",
   "What is the name of your first pet?",
   "In what city were you born?",
   "What is your mother's maiden name?",
