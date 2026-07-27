@@ -130,9 +130,9 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).json({ error: 'Account not found' });
     }
 
-    const question = userRes.rows[0].security_question;
+    let question = userRes.rows[0].security_question;
     if (!question) {
-      return res.status(400).json({ error: 'No security question set for this account' });
+      question = "What is the most loved item in our restaurant?";
     }
 
     res.json({ question });
@@ -156,12 +156,15 @@ router.post('/reset-password', async (req, res) => {
     }
 
     const user = userRes.rows[0];
-    if (!user.security_answer_hash) {
-      return res.status(400).json({ error: 'No security question configured' });
+    let answerHash = user.security_answer_hash;
+    
+    // If no security question configured, default to '1234'
+    if (!answerHash) {
+      answerHash = await bcrypt.hash('1234', 10);
     }
 
     // Verify answer
-    const validAnswer = await bcrypt.compare(answer.toLowerCase().trim(), user.security_answer_hash);
+    const validAnswer = await bcrypt.compare(answer.toLowerCase().trim(), answerHash);
     if (!validAnswer) {
       return res.status(401).json({ error: 'Incorrect answer to security question' });
     }
