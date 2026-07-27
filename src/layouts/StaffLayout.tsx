@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { staffNavItems } from "@/config/navigation";
 import { useAuth } from "@/app/providers/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useOrders } from "@/hooks/useOrders";
 import type { User, NavItem } from "@/types";
 
@@ -13,6 +14,7 @@ export function StaffLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
   const { orders } = useOrders();
+  const { notifications } = useNotifications();
 
   const kitchenOrdersCount = orders.filter((o) => o.status === "cooking" || o.status === "pending").length;
 
@@ -35,7 +37,7 @@ export function StaffLayout() {
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar
         user={currentUser}
-        notifications={[]}
+        notifications={notifications}
         onMenuToggle={() => setSidebarOpen((prev) => !prev)}
         sidebarOpen={sidebarOpen}
       />

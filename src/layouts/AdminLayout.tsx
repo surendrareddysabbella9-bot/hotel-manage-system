@@ -9,6 +9,7 @@ import { useAuth } from "@/app/providers/AuthContext";
 import { useOrders } from "@/hooks/useOrders";
 import { useInventory } from "@/hooks/useInventory";
 import { useReservations } from "@/hooks/useReservations";
+import { useNotifications } from "@/hooks/useNotifications";
 import type { User, NavItem } from "@/types";
 
 export function AdminLayout() {
@@ -17,6 +18,7 @@ export function AdminLayout() {
   const { orders } = useOrders();
   const { lowStockCount } = useInventory();
   const { reservations } = useReservations();
+  const { notifications } = useNotifications();
 
   const activeOrdersCount = orders.filter((o) => o.status !== "served" && o.status !== "cancelled").length;
   const activeReservationsCount = reservations.filter((r) => r.status === "confirmed").length;
@@ -46,7 +48,7 @@ export function AdminLayout() {
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar
         user={currentUser}
-        notifications={[]}
+        notifications={notifications}
         onMenuToggle={() => setSidebarOpen((prev) => !prev)}
         sidebarOpen={sidebarOpen}
       />

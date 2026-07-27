@@ -7,11 +7,13 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { AgenticChatbot } from "@/components/customer/AgenticChatbot";
 import { customerNavItems } from "@/config/navigation";
 import { useAuth } from "@/app/providers/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import type { User } from "@/types";
 
 export function CustomerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const { notifications } = useNotifications();
 
   const currentUser: User = user || {
     id: "cust-1",
@@ -25,7 +27,7 @@ export function CustomerLayout() {
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar
         user={currentUser}
-        notifications={[]}
+        notifications={notifications}
         onMenuToggle={() => setSidebarOpen((prev) => !prev)}
         sidebarOpen={sidebarOpen}
       />
