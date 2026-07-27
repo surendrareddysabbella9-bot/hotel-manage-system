@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import { useAuth } from "@/app/providers/AuthContext";
-import type { UserRole } from "@/types";
 
 export function SignupPage() {
   const navigate = useNavigate();

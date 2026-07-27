@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import { NotificationDropdown } from "@/components/shared/NotificationDropdown";
 import { ProfileDropdown } from "@/components/shared/ProfileDropdown";
-import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { APP_NAME } from "@/constants";
 import { cn } from "@/lib/utils";

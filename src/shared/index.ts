@@ -13,7 +13,7 @@ export * from '@/components/layout/Sidebar';
 
 // Shared Cards
 export * from '@/components/cards/FoodCard';
-export * from '@/components/cards/InventoryCard';
+
 export * from '@/components/cards/ReservationCard';
 export * from '@/components/cards/TableCard';
 
