@@ -11,7 +11,7 @@ import { useAuth } from "@/app/providers/AuthContext";
 export function AdminLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginWithEmail } = useAuth();
+  const { loginWithEmail, user, logout } = useAuth();
 
   const [email, setEmail] = useState<string>(location.state?.prefillEmail || "admin@gmail.com");
   const [password, setPassword] = useState("Admin@123");
@@ -90,6 +90,13 @@ export function AdminLogin() {
           <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm font-semibold text-red-400 flex items-center gap-2">
             <ShieldAlert className="size-5 shrink-0" />
             <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {user && (
+          <div className="mb-6 rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm font-semibold text-indigo-400 flex items-center justify-between">
+            <span>Signed in as {user.email}</span>
+            <Button size="sm" variant="outline" onClick={logout} className="h-8 border-indigo-500/50 hover:bg-indigo-500/20 text-indigo-300">Sign Out</Button>
           </div>
         )}
 

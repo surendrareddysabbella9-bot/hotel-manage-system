@@ -11,7 +11,7 @@ import { useAuth } from "@/app/providers/AuthContext";
 export function StaffLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginWithEmail } = useAuth();
+  const { loginWithEmail, user, logout } = useAuth();
 
   const [email, setEmail] = useState<string>(location.state?.prefillEmail || "staff@gmail.com");
   const [password, setPassword] = useState("Staff@123");
@@ -82,6 +82,13 @@ export function StaffLogin() {
           <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50/90 p-3.5 text-sm font-medium text-rose-800 flex items-start gap-3 shadow-xs">
             <ShieldAlert className="size-5 text-rose-600 shrink-0 mt-0.5" />
             <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {user && (
+          <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50/90 p-3.5 text-sm font-medium text-slate-800 flex items-center justify-between shadow-xs">
+            <span>Signed in as {user.email}</span>
+            <Button size="sm" variant="outline" onClick={logout} className="h-8">Sign Out</Button>
           </div>
         )}
 

@@ -12,7 +12,7 @@ import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 export function CustomerLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginWithEmail } = useAuth();
+  const { loginWithEmail, user, logout } = useAuth();
 
   const [email, setEmail] = useState<string>(location.state?.prefillEmail || "");
   const [password, setPassword] = useState("");
@@ -52,9 +52,12 @@ export function CustomerLogin() {
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-background relative">
-      {/* Home Button */}
-      <Link to={ROUTES.landing} className="absolute top-4 left-4 z-50 p-2 bg-background/50 backdrop-blur-md rounded-full border border-border hover:bg-background/80 transition-colors">
-        <Home className="size-5" />
+      {/* Home Button / Logo */}
+      <Link to={ROUTES.landing} className="absolute top-4 left-6 z-50 flex items-center gap-2 font-semibold bg-background/50 backdrop-blur-md px-3 py-1.5 rounded-xl border border-border hover:bg-background/80 transition-colors">
+        <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm">
+          R
+        </div>
+        <span className="hidden sm:inline-block">RestaurantOS</span>
       </Link>
 
       {/* Left Side - Image / Branding */}
@@ -91,9 +94,16 @@ export function CustomerLogin() {
           )}
 
           {errorMsg && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm font-semibold text-destructive flex items-center gap-2">
-              <ShieldAlert className="size-5 shrink-0" />
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive flex items-center gap-2">
+              <ShieldAlert className="size-4 shrink-0" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {user && (
+            <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm font-medium text-primary flex items-center justify-between shadow-xs">
+              <span>Signed in as {user.email}</span>
+              <Button size="sm" variant="outline" onClick={logout}>Sign Out</Button>
             </div>
           )}
 

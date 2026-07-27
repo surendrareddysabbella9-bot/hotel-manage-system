@@ -15,9 +15,12 @@ export function AuthLayout({
 }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen relative">
-      {/* Home Button */}
-      <Link to={ROUTES.landing} className="absolute top-4 left-4 z-50 p-2 bg-background/50 backdrop-blur-md rounded-full border border-border hover:bg-background/80 transition-colors">
-        <Home className="size-5" />
+      {/* Home Button / Logo */}
+      <Link to={ROUTES.landing} className="absolute top-4 left-6 z-50 flex items-center gap-2 font-semibold bg-background/50 backdrop-blur-md px-3 py-1.5 rounded-xl border border-border hover:bg-background/80 transition-colors">
+        <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm">
+          R
+        </div>
+        <span className="hidden sm:inline-block">RestaurantOS</span>
       </Link>
       
       <div className="hidden w-1/2 flex-col justify-between bg-card p-12 lg:flex">
