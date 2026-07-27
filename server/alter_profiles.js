@@ -25,7 +25,7 @@ async function main() {
       UPDATE profiles 
       SET security_question = 'What is the most loved item in our restaurant?', 
           security_answer_hash = $1
-      WHERE security_question IS NULL OR security_question = 'What is the name of your first pet?';
+      WHERE security_question IS NULL OR security_question = 'What is the name of your first pet?' OR security_question = 'What is the default recovery PIN?';
     `, [defaultHash]);
     
     console.log("Successfully added security question columns and updated existing users.");

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, Home } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,12 @@ export function CustomerLogin() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row bg-background">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-background relative">
+      {/* Home Button */}
+      <Link to={ROUTES.landing} className="absolute top-4 left-4 z-50 p-2 bg-background/50 backdrop-blur-md rounded-full border border-border hover:bg-background/80 transition-colors">
+        <Home className="size-5" />
+      </Link>
+
       {/* Left Side - Image / Branding */}
       <div className="md:w-1/2 lg:w-3/5 relative hidden md:block overflow-hidden bg-primary/10">
         <div className="absolute inset-0 bg-black/40 z-10" />

@@ -6,6 +6,11 @@ export interface TopDish {
   revenue: string;
 }
 
+export interface ChartDataPoint {
+  name: string;
+  value: number;
+}
+
 export interface AnalyticsData {
   monthlyRevenue: string;
   monthlyRevenueChange: number;
@@ -16,6 +21,8 @@ export interface AnalyticsData {
   customerRetention: string;
   customerRetentionChange: number;
   topDishes: TopDish[];
+  revenueData: ChartDataPoint[];
+  peakHoursData: ChartDataPoint[];
 }
 
 export const analyticsService = {
@@ -50,6 +57,28 @@ export const analyticsService = {
       .sort((a, b) => b.orders - a.orders)
       .slice(0, 4);
 
+    // Mock Chart Data
+    const revenueData: ChartDataPoint[] = [
+      { name: 'Jan', value: 45000 },
+      { name: 'Feb', value: 52000 },
+      { name: 'Mar', value: 48000 },
+      { name: 'Apr', value: 61000 },
+      { name: 'May', value: 59000 },
+      { name: 'Jun', value: 67000 },
+      { name: 'Jul', value: totalRev > 0 ? totalRev : 72000 },
+    ];
+
+    const peakHoursData: ChartDataPoint[] = [
+      { name: '8 AM', value: 12 },
+      { name: '10 AM', value: 25 },
+      { name: '12 PM', value: 85 },
+      { name: '2 PM', value: 65 },
+      { name: '4 PM', value: 30 },
+      { name: '6 PM', value: 95 },
+      { name: '8 PM', value: 120 },
+      { name: '10 PM', value: 45 },
+    ];
+
     return {
       monthlyRevenue: `₹${totalRev.toFixed(2)}`,
       monthlyRevenueChange: 14.2,
@@ -60,6 +89,8 @@ export const analyticsService = {
       customerRetention: `${Math.min(95, Math.max(0, customerCount * 2))}%`,
       customerRetentionChange: 8.4,
       topDishes: sortedDishes,
+      revenueData,
+      peakHoursData,
     };
   },
 };

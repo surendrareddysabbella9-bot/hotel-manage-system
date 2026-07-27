@@ -1,5 +1,7 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Home } from "lucide-react";
+import { ROUTES } from "@/constants";
 
 interface AuthLayoutProps {
   title?: string;
@@ -12,7 +14,12 @@ export function AuthLayout({
   subtitle = "Sign in to your RestaurantOS account",
 }: AuthLayoutProps) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen relative">
+      {/* Home Button */}
+      <Link to={ROUTES.landing} className="absolute top-4 left-4 z-50 p-2 bg-background/50 backdrop-blur-md rounded-full border border-border hover:bg-background/80 transition-colors">
+        <Home className="size-5" />
+      </Link>
+      
       <div className="hidden w-1/2 flex-col justify-between bg-card p-12 lg:flex">
         <div>
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">

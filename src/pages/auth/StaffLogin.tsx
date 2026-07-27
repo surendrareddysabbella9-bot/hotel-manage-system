@@ -13,8 +13,8 @@ export function StaffLogin() {
   const location = useLocation();
   const { loginWithEmail } = useAuth();
 
-  const [email, setEmail] = useState<string>(location.state?.prefillEmail || "");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>(location.state?.prefillEmail || "staff@gmail.com");
+  const [password, setPassword] = useState("Staff@123");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg] = useState<string>(location.state?.successMessage || "");
   const [errorMsg, setErrorMsg] = useState<string>(
