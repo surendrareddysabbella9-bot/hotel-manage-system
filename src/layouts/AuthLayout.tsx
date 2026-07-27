@@ -1,6 +1,5 @@
 import { Outlet, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home } from "lucide-react";
 import { ROUTES } from "@/constants";
 
 interface AuthLayoutProps {

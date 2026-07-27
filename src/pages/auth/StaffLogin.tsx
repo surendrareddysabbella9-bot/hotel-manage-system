@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChefHat, ShieldAlert, Mail, Lock, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 
@@ -17,9 +17,14 @@ export function StaffLogin() {
   const [password, setPassword] = useState("Staff@123");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg] = useState<string>(location.state?.successMessage || "");
-  const [errorMsg, setErrorMsg] = useState<string>(
-    location.state?.unauthorized ? (location.state?.message || "") : ""
-  );
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  // Automatically clear session if visiting login page while authenticated
+  useEffect(() => {
+    if (user) {
+      logout();
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,13 +87,6 @@ export function StaffLogin() {
           <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50/90 p-3.5 text-sm font-medium text-rose-800 flex items-start gap-3 shadow-xs">
             <ShieldAlert className="size-5 text-rose-600 shrink-0 mt-0.5" />
             <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {user && (
-          <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50/90 p-3.5 text-sm font-medium text-slate-800 flex items-center justify-between shadow-xs">
-            <span>Signed in as {user.email}</span>
-            <Button size="sm" variant="outline" onClick={logout} className="h-8">Sign Out</Button>
           </div>
         )}
 

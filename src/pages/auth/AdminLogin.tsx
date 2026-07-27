@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Shield, ShieldAlert, Key } from "lucide-react";
 
@@ -17,9 +17,14 @@ export function AdminLogin() {
   const [password, setPassword] = useState("Admin@123");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg] = useState<string>(location.state?.successMessage || "");
-  const [errorMsg, setErrorMsg] = useState<string>(
-    location.state?.unauthorized ? (location.state?.message || "") : ""
-  );
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  // Automatically clear session if visiting login page while authenticated
+  useEffect(() => {
+    if (user) {
+      logout();
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,13 +95,6 @@ export function AdminLogin() {
           <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm font-semibold text-red-400 flex items-center gap-2">
             <ShieldAlert className="size-5 shrink-0" />
             <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {user && (
-          <div className="mb-6 rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm font-semibold text-indigo-400 flex items-center justify-between">
-            <span>Signed in as {user.email}</span>
-            <Button size="sm" variant="outline" onClick={logout} className="h-8 border-indigo-500/50 hover:bg-indigo-500/20 text-indigo-300">Sign Out</Button>
           </div>
         )}
 
