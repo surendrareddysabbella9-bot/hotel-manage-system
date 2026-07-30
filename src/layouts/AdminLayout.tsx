@@ -64,7 +64,7 @@ export function AdminLayout() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
-          className="flex-1 p-4 md:p-6 lg:p-8"
+          className="flex-1 min-w-0 overflow-x-hidden p-4 md:p-6 lg:p-8"
         >
           <Outlet />
         </motion.main>
