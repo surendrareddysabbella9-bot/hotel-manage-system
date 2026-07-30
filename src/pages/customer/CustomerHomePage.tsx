@@ -112,7 +112,7 @@ export function CustomerHomePage() {
           </Button>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {featuredItems.map((item) => (
             <FoodCard key={item.id} item={item} onAddToCart={() => {}} />
           ))}
