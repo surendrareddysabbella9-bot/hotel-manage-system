@@ -10,6 +10,35 @@
 
 ---
 
+## 🏆 Hackathon Submission Details
+
+**Team Name:** Surendra Reddy Sabbella (Individual)
+**Hosted Application Link:** [https://hotel-manage-system.onrender.com](https://hotel-manage-system.onrender.com) (Deployed on Render)
+
+### 🚀 User Stories Completed
+
+We have successfully completed all tiers of the challenge (Bronze to Platinum):
+
+**Bronze Level – User Experience**
+* **User Story 1:** Built a responsive, modern interface with a unified dark theme and intuitive navigation for Customers, Staff, and Admins.
+
+**Silver Level – Authentication & Digital Operations**
+* **User Story 2:** Implemented role-based secure authentication (Email/Password & Google OAuth).
+* **User Story 3:** Digitized core workflows including a Digital Menu, Smart Cart, Live Order Tracking, Table Reservations, and Staff KDS.
+
+**Gold Level – Restaurant Management**
+* **User Story 4:** Developed a comprehensive Admin Dashboard to manage Orders, Tables, Inventory, Staff, Customers, and Sales Analytics.
+
+**Platinum Level – Intelligent Operations**
+* **User Story 5:** Integrated intelligent features such as AI Predictive Search for dishes, Smart Notifications, Inventory Low-Stock Triggers, and an Agentic AI Chatbot for customers.
+
+### 🤖 AI Usage
+The platform utilizes AI for two major features:
+1. **Agentic AI Chatbot (`/customer`)**: Helps users decide what to eat by analyzing their preferences and providing personalized menu recommendations.
+2. **AI Predictive Autocomplete**: Enhances the digital menu search experience by intelligently suggesting dish names and ingredients as users type, using Google Gemini API.
+
+---
+
 ## 🚀 Feature Analysis Report
 
 RestaurantOS is structured into **four core operational portals**:
