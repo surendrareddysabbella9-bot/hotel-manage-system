@@ -93,7 +93,7 @@ export function DigitalMenuPage() {
       />
 
       {/* Search & Category Filter Header */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+      <div className="flex flex-col gap-4">
         {/* Search Bar */}
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
@@ -136,7 +136,7 @@ export function DigitalMenuPage() {
         </div>
 
         {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0">
+        <div className="flex flex-wrap items-center gap-2 w-full pb-2 sm:pb-0">
           <Button
             size="sm"
             variant={selectedCategory === "all" ? "default" : "outline"}
@@ -158,7 +158,7 @@ export function DigitalMenuPage() {
       </div>
 
       {/* Dietary Tags */}
-      <div className="flex items-center gap-2 overflow-x-auto text-xs py-1">
+      <div className="flex flex-wrap items-center gap-2 text-xs py-1">
         <Filter className="size-3.5 text-muted-foreground shrink-0" />
         <span className="text-muted-foreground font-medium shrink-0">Tags:</span>
         {tags.map((tag) => (
