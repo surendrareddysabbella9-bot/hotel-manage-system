@@ -12,7 +12,7 @@
 
 ## 🏆 Hackathon Submission Details
 
-**Team Name:** Surendra Reddy Sabbella (Individual)
+**Team Name:** SPIDY
 **Hosted Application Link:** [https://hotel-manage-system.onrender.com](https://hotel-manage-system.onrender.com) (Deployed on Render)
 
 ### 🚀 User Stories Completed
