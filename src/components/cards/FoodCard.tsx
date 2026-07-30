@@ -21,8 +21,8 @@ export function FoodCard({ item, onAddToCart, className }: FoodCardProps) {
       transition={{ duration: 0.2 }}
       className={cn("group h-full", className)}
     >
-      <Card className="h-full flex flex-col md:flex-row overflow-hidden bg-background/60 backdrop-blur-xl border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <div className="relative h-48 md:h-auto md:w-2/5 shrink-0 overflow-hidden">
+      <Card className="h-full flex flex-col overflow-hidden bg-background/60 backdrop-blur-xl border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="relative h-48 shrink-0 overflow-hidden">
           <img
             src={item.imageUrl}
             alt={item.name}
@@ -42,7 +42,7 @@ export function FoodCard({ item, onAddToCart, className }: FoodCardProps) {
             {item.available ? "Available" : "Unavailable"}
           </Badge>
         </div>
-        <div className="flex-1 flex flex-col md:w-3/5">
+        <div className="flex-1 flex flex-col">
           <CardContent className="space-y-2 p-4 flex-1 flex flex-col">
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold leading-tight">{item.name}</h3>
