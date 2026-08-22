@@ -183,7 +183,7 @@ router.get('/:table', async (req, res) => {
       }
     } else if (userRole === 'guest') {
       // Guests can only read menu, categories, and tables
-      const allowedTables = ['menu_items', 'menu_categories', 'restaurant_tables', 'orders'];
+      const allowedTables = ['menu_items', 'menu_categories', 'restaurant_tables', 'orders', 'order_items'];
       if (!allowedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Guest access limited' });
       }

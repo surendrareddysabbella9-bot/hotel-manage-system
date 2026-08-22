@@ -343,7 +343,7 @@ export function CartPage() {
               <p className="text-sm text-muted-foreground mt-2">
                 Your order has been placed. Redirecting to tracking...
               </p>
-              {user && (
+              {user && user.role !== "guest" && (
                 <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
                   <p className="text-amber-800 text-sm font-semibold">
                     🎉 You earned {Math.floor(total / 10)} Loyalty Points!
