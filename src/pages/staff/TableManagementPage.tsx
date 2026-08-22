@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Grid3X3 } from "lucide-react";
+import { Grid3X3, Download, QrCode } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,27 @@ export function TableManagementPage() {
     await updateTableStatus(tableId, newStatus);
     if (selectedTable && selectedTable.id === tableId) {
       setSelectedTable({ ...selectedTable, status: newStatus });
+    }
+  };
+
+  const handleDownloadQR = async (table: RestaurantTable) => {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://hotel-manage-system.onrender.com";
+    const url = `${baseUrl}/scan/table/${table.number}`;
+    
+    try {
+      const QRCode = (await import("qrcode")).default;
+      const dataUrl = await QRCode.toDataURL(url, {
+        width: 300,
+        margin: 2,
+        color: { dark: "#000000", light: "#ffffff" },
+        errorCorrectionLevel: "M",
+      });
+      const link = document.createElement("a");
+      link.download = `table-${table.number}-qr.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate QR code", err);
     }
   };
 
@@ -92,6 +113,12 @@ export function TableManagementPage() {
             </DialogHeader>
 
             <div className="space-y-4 py-4">
+              <div className="flex justify-end border-b pb-4 mb-2">
+                <Button variant="outline" size="sm" onClick={() => handleDownloadQR(selectedTable)} className="gap-2">
+                  <QrCode className="size-4" />
+                  <Download className="size-3" /> QR Code
+                </Button>
+              </div>
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground">Change Table Status</h4>
                 <div className="grid grid-cols-2 gap-2">

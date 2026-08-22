@@ -19,8 +19,125 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Apply auth middleware to all API routes
+// Apply auth middleware to all API routes EXCEPT the public scan endpoint
+// (scan endpoint is registered before this middleware)
+
+// PUBLIC: GET /api/scan/table/:tableNumber — No auth required, used by QR codes
+router.get('/scan/table/:tableNumber', async (req, res) => {
+  const tableNumber = parseInt(req.params.tableNumber, 10);
+  if (isNaN(tableNumber) || tableNumber <= 0) {
+    return res.status(400).json({ error: 'Invalid table number' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT id, number, capacity, status, section FROM restaurant_tables WHERE number = $1',
+      [tableNumber]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Table not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Scan table error:', err);
+    res.status(500).json({ error: 'Failed to fetch table info' });
+  }
+});
+
+// Apply auth middleware to all remaining routes
 router.use(authenticateToken);
+
+// POST /api/book-table — Book a table via QR scan (guest or customer)
+router.post('/book-table', async (req, res) => {
+  const { tableNumber, partySize } = req.body;
+  const userId = req.user.id;
+  const userRole = req.user.role;
+  const userName = req.user.fullName || 'Guest Diner';
+
+  if (!tableNumber) {
+    return res.status(400).json({ error: 'Table number is required' });
+  }
+
+  // Only customers and guests can book tables via QR
+  if (!['customer', 'guest', 'admin'].includes(userRole)) {
+    return res.status(403).json({ error: 'Forbidden: Only customers can book tables via QR' });
+  }
+
+  try {
+    // 1. Fetch the table
+    const tableRes = await pool.query(
+      'SELECT id, number, capacity, status, section FROM restaurant_tables WHERE number = $1',
+      [tableNumber]
+    );
+
+    if (tableRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Table not found' });
+    }
+
+    const table = tableRes.rows[0];
+
+    if (table.status !== 'available') {
+      return res.status(409).json({ 
+        error: `Table ${tableNumber} is currently ${table.status}. Please try another table.`,
+        currentStatus: table.status
+      });
+    }
+
+    // 2. Mark table as occupied
+    await pool.query(
+      "UPDATE restaurant_tables SET status = 'occupied', updated_at = NOW() WHERE id = $1",
+      [table.id]
+    );
+
+    // 3. Create a reservation record
+    const reservationRes = await pool.query(
+      `INSERT INTO reservations (customer_id, table_id, customer_name, party_size, reservation_date, reservation_time, status, special_requests)
+       VALUES ($1, $2, $3, $4, CURRENT_DATE, CURRENT_TIME, 'seated', 'Walk-in via QR scan')
+       RETURNING *`,
+      [
+        userRole === 'guest' ? null : userId,
+        table.id,
+        userName,
+        partySize || 1
+      ]
+    );
+
+    const reservation = reservationRes.rows[0];
+
+    // 4. Emit real-time events
+    if (req.io) {
+      req.io.emit('table_booked', { table: { ...table, status: 'occupied' }, reservation });
+      req.io.emit('restaurant_tables_updated', { ...table, status: 'occupied' });
+      req.io.emit('live_alert', {
+        type: 'info',
+        title: 'New Walk-In',
+        message: `${userName} just booked Table #${tableNumber} via QR scan`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      table: { ...table, status: 'occupied' },
+      reservation: {
+        id: reservation.id,
+        customerId: reservation.customer_id,
+        customerName: reservation.customer_name,
+        partySize: reservation.party_size,
+        date: reservation.reservation_date,
+        time: reservation.reservation_time,
+        status: reservation.status,
+        tableNumber: table.number,
+        section: table.section
+      }
+    });
+  } catch (err) {
+    console.error('Book table error:', err);
+    res.status(500).json({ error: 'Failed to book table' });
+  }
+});
 
 // Generic GET multiple rows
 router.get('/:table', async (req, res) => {
@@ -63,6 +180,15 @@ router.get('/:table', async (req, res) => {
         } else {
           filters.push(['customer_id', userId]);
         }
+      }
+    } else if (userRole === 'guest') {
+      // Guests can only read menu, categories, and tables
+      const allowedTables = ['menu_items', 'menu_categories', 'restaurant_tables', 'orders'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Guest access limited' });
+      }
+      if (table === 'orders') {
+        filters.push(['customer_name', req.user.fullName || 'Guest Diner']);
       }
     } else {
       return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
@@ -126,6 +252,11 @@ router.get('/:table/:id', async (req, res) => {
         if (checkRes.rows.length === 0) {
           return res.status(403).json({ error: 'Forbidden: Resource does not belong to you' });
         }
+      }
+    } else if (userRole === 'guest') {
+      const allowedTables = ['menu_items', 'menu_categories', 'restaurant_tables'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Guest access limited' });
       }
     } else {
       return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
@@ -219,6 +350,11 @@ router.post('/:table', async (req, res) => {
         return res.status(403).json({ error: 'Forbidden: Customers cannot write to this table' });
       }
       req.body.customer_id = userId; // Force customer ownership
+    } else if (userRole === 'guest') {
+      const allowedTables = ['orders', 'order_items', 'payments'];
+      if (!allowedTables.includes(table)) {
+        return res.status(403).json({ error: 'Forbidden: Guests have limited write access' });
+      }
     } else {
       return res.status(403).json({ error: 'Forbidden: Invalid or missing role' });
     }

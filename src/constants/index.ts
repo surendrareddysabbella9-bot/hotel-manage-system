@@ -39,6 +39,9 @@ export const ROUTES = {
     analytics: "/admin/analytics",
     settings: "/admin/settings",
   },
+  scan: {
+    table: "/scan/table",
+  },
 } as const;
 
 export const TABLE_STATUS_COLORS = {

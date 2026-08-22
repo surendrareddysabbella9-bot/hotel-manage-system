@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AgenticChatbot } from "@/components/customer/AgenticChatbot";
+import { GuestUpsellBanner } from "@/components/shared/GuestUpsellBanner";
+import { LiveAlertToast } from "@/components/shared/LiveAlertToast";
 import { customerNavItems } from "@/config/navigation";
 import { useAuth } from "@/app/providers/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -25,6 +27,11 @@ export function CustomerLayout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      {/* Guest Upsell Banner — shown only for guest sessions */}
+      <GuestUpsellBanner />
+      {/* Live Alert Toasts — real-time notifications */}
+      <LiveAlertToast />
+
       <Navbar
         user={currentUser}
         notifications={notifications}

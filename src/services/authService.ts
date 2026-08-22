@@ -58,6 +58,14 @@ export const authService = {
     throw new Error('Google Login is not supported in the custom backend yet.');
   },
 
+  async loginAsGuest(guestName: string): Promise<{ user: User; token: string }> {
+    const response = await apiFetch('/auth/guest', {
+      method: 'POST',
+      body: JSON.stringify({ guestName }),
+    });
+    return { user: response.user, token: response.token };
+  },
+
   async logout(): Promise<void> {
     localStorage.removeItem('token');
   },

@@ -278,4 +278,35 @@ router.post('/google', async (req, res) => {
   }
 });
 
+// POST /api/auth/guest — Ephemeral guest session for QR walk-in booking
+router.post('/guest', async (req, res) => {
+  const { guestName } = req.body;
+  if (!guestName || guestName.trim().length === 0) {
+    return res.status(400).json({ error: 'Guest name is required' });
+  }
+
+  try {
+    const guestId = `guest-${crypto.randomUUID()}`;
+    const token = jwt.sign(
+      { id: guestId, email: `${guestId}@guest.local`, role: 'guest', fullName: guestName.trim(), createdAt: new Date().toISOString() },
+      JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    res.status(201).json({
+      user: {
+        id: guestId,
+        email: `${guestId}@guest.local`,
+        fullName: guestName.trim(),
+        role: 'guest',
+        createdAt: new Date().toISOString()
+      },
+      token
+    });
+  } catch (err) {
+    console.error('Guest session error:', err);
+    res.status(500).json({ error: 'Failed to create guest session' });
+  }
+});
+
 export default router;

@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, Sparkles, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, Sparkles, Loader2, QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
@@ -16,6 +16,8 @@ import { ROUTES } from "@/constants";
 import { useDashboard } from "@/hooks/useDashboard";
 import { aiService } from "@/services/aiService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { QRCodeGenerator } from "@/components/admin/QRCodeGenerator";
+import { LiveAlertToast } from "@/components/shared/LiveAlertToast";
 import type { Order } from "@/types";
 
 export function AdminDashboardPage() {
@@ -23,6 +25,7 @@ export function AdminDashboardPage() {
   const [eodReport, setEodReport] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQROpen, setIsQROpen] = useState(false);
 
   const handleGenerateEod = async () => {
     setIsModalOpen(true);
@@ -108,11 +111,23 @@ export function AdminDashboardPage() {
           title="Executive Overview"
           description="Real-time operational summary and key restaurant metrics"
         />
-        <Button onClick={handleGenerateEod} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20">
-          <Sparkles className="size-4" />
-          Generate EOD Report
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsQROpen(true)} variant="outline" className="gap-2">
+            <QrCode className="size-4" />
+            Table QR Codes
+          </Button>
+          <Button onClick={handleGenerateEod} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20">
+            <Sparkles className="size-4" />
+            Generate EOD Report
+          </Button>
+        </div>
       </div>
+
+      {/* Live Alert Toasts */}
+      <LiveAlertToast />
+
+      {/* QR Code Generator Dialog */}
+      <QRCodeGenerator open={isQROpen} onClose={() => setIsQROpen(false)} />
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">

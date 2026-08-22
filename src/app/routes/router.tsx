@@ -39,6 +39,7 @@ import {
   StaffOrdersPage,
   TableManagementPage,
 } from "@/pages/staff";
+import { ScanTablePage } from "@/pages/scan/ScanTablePage";
 
 export const router = createBrowserRouter([
   // Landing Page Root
@@ -46,6 +47,9 @@ export const router = createBrowserRouter([
     path: ROUTES.landing,
     element: <LandingPage />,
   },
+
+  // QR Scan — Public route (no auth required)
+  { path: "/scan/table/:tableNumber", element: <ScanTablePage /> },
 
   // Distinct Login Pages (No shared AuthLayout to allow custom full-screen designs)
   { path: "/customer/login", element: <CustomerLogin /> },
