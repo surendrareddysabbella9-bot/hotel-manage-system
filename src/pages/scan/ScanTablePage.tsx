@@ -555,7 +555,7 @@ export function ScanTablePage() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Party Size</p>
-                        <p className="text-lg font-semibold mt-1">{bookingResult.reservation.partySize}</p>
+                        <p className="text-lg font-semibold mt-1">{bookingResult.reservation?.partySize || partySize}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Status</p>
