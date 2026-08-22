@@ -107,105 +107,122 @@ export function CustomerProfilePage() {
             <p className="text-xs text-muted-foreground relative z-10">{email}</p>
           </CardHeader>
           <CardContent className="space-y-4 pt-4 border-t border-border/50 text-xs">
-            <div className={cn("flex items-center justify-between p-3 rounded-lg border", TIER_COLORS[loyaltyTier] || TIER_COLORS.Bronze)}>
-              <div className="flex items-center gap-2">
-                <Award className="size-4" />
-                <span className="font-semibold uppercase tracking-wider text-[10px]">Loyalty Tier</span>
-              </div>
-              <span className="font-bold text-sm">{loyaltyTier}</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/10 text-primary">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4" />
-                <span className="font-semibold uppercase tracking-wider text-[10px]">Reward Points</span>
-              </div>
-              <span className="font-bold text-lg">{loyaltyPoints}</span>
-            </div>
-
-            {/* Progress to next tier */}
-            <div className="pt-2 space-y-2">
-              <div className="flex justify-between items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                <span>{loyaltyTier}</span>
-                <span>{progress.nextTier}</span>
-              </div>
-              <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary rounded-full transition-all duration-1000"
-                  style={{ width: `${progress.percentage}%` }}
-                />
-              </div>
-              {progress.pointsNeeded > 0 && (
-                <p className="text-[10px] text-muted-foreground text-center">
-                  Earn <span className="font-bold text-foreground">{progress.pointsNeeded}</span> more points to reach {progress.nextTier}!
+            {user?.role === 'guest' ? (
+              <div className="text-center p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
+                <ShieldCheck className="size-8 mx-auto text-primary opacity-50" />
+                <h4 className="font-semibold text-sm">Guest Session</h4>
+                <p className="text-xs text-muted-foreground">
+                  You are currently dining as a guest. Create an account to earn reward points and track your history!
                 </p>
-              )}
-            </div>
+                <Button className="w-full mt-2 text-xs h-8" variant="default" onClick={() => window.location.href = '/customer/login'}>
+                  Sign Up / Login
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className={cn("flex items-center justify-between p-3 rounded-lg border", TIER_COLORS[loyaltyTier] || TIER_COLORS.Bronze)}>
+                  <div className="flex items-center gap-2">
+                    <Award className="size-4" />
+                    <span className="font-semibold uppercase tracking-wider text-[10px]">Loyalty Tier</span>
+                  </div>
+                  <span className="font-bold text-sm">{loyaltyTier}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/10 text-primary">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="size-4" />
+                    <span className="font-semibold uppercase tracking-wider text-[10px]">Reward Points</span>
+                  </div>
+                  <span className="font-bold text-lg">{loyaltyPoints}</span>
+                </div>
+
+                {/* Progress to next tier */}
+                <div className="pt-2 space-y-2">
+                  <div className="flex justify-between items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    <span>{loyaltyTier}</span>
+                    <span>{progress.nextTier}</span>
+                  </div>
+                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full transition-all duration-1000"
+                      style={{ width: `${progress.percentage}%` }}
+                    />
+                  </div>
+                  {progress.pointsNeeded > 0 && (
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Earn <span className="font-bold text-foreground">{progress.pointsNeeded}</span> more points to reach {progress.nextTier}!
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
-        {/* Edit Personal Information Form */}
-        <Card className="md:col-span-2 bg-background/60 backdrop-blur-xl border-border/40 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Personal Information</CardTitle>
-          </CardHeader>
-          <form onSubmit={handleSaveProfile}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-9"
-                    required
-                  />
+        {/* Edit Personal Information Form (Hidden for guests) */}
+        {user?.role !== 'guest' && (
+          <Card className="md:col-span-2 bg-background/60 backdrop-blur-xl border-border/40 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Personal Information</CardTitle>
+            </CardHeader>
+            <form onSubmit={handleSaveProfile}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-9"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="pl-9 bg-muted/50 cursor-not-allowed"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      disabled
+                      className="pl-9 bg-muted/50 cursor-not-allowed"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    placeholder="+91 9876543210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="pl-9"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      placeholder="+91 9876543210"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
+              </CardContent>
 
-            <CardFooter className="flex items-center justify-between pt-4 border-t border-border">
-              {isSaved ? (
-                <p className="text-xs text-success font-semibold flex items-center gap-1">
-                  Profile updated successfully in database!
-                </p>
-              ) : <div />}
-              <Button type="submit" size="sm" className="gap-2" disabled={isSaving}>
-                <Save className="size-3.5" /> {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
+              <CardFooter className="flex items-center justify-between pt-4 border-t border-border">
+                {isSaved ? (
+                  <p className="text-xs text-success font-semibold flex items-center gap-1">
+                    Profile updated successfully in database!
+                  </p>
+                ) : <div />}
+                <Button type="submit" size="sm" className="gap-2" disabled={isSaving}>
+                  <Save className="size-3.5" /> {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        )}
       </div>
 
       {/* Order History */}

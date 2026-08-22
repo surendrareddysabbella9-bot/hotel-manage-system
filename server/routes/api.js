@@ -91,20 +91,17 @@ router.post('/book-table', async (req, res) => {
       [table.id]
     );
 
-    // 3. Create a reservation record
-    const reservationRes = await pool.query(
-      `INSERT INTO reservations (customer_id, table_id, customer_name, party_size, reservation_date, reservation_time, status, special_requests)
-       VALUES ($1, $2, $3, $4, CURRENT_DATE, CURRENT_TIME, 'seated', 'Walk-in via QR scan')
-       RETURNING *`,
-      [
-        userRole === 'guest' ? null : userId,
-        table.id,
-        userName,
-        partySize || 1
-      ]
-    );
-
-    const reservation = reservationRes.rows[0];
+    let reservation = null;
+    
+    // Only create a reservation record if it's a registered customer
+    if (userRole !== 'guest') {
+      const reservationRes = await pool.query(
+        `INSERT INTO reservations (customer_id, table_id, customer_name, party_size, reservation_date, reservation_time, status) 
+         VALUES ($1, $2, $3, CURRENT_DATE, CURRENT_TIME, 'confirmed') RETURNING *`,
+        [userId, table.id, userName, partySize || 1]
+      );
+      reservation = reservationRes.rows[0];
+    }
 
     // 4. Emit real-time events
     if (req.io) {
@@ -113,7 +110,7 @@ router.post('/book-table', async (req, res) => {
       req.io.emit('live_alert', {
         type: 'info',
         title: 'New Walk-In',
-        message: `${userName} just booked Table #${tableNumber} via QR scan`,
+        message: `${userName} just scanned Table #${tableNumber}`,
         timestamp: new Date().toISOString()
       });
     }
@@ -121,7 +118,7 @@ router.post('/book-table', async (req, res) => {
     res.status(201).json({
       success: true,
       table: { ...table, status: 'occupied' },
-      reservation: {
+      reservation: reservation ? {
         id: reservation.id,
         customerId: reservation.customer_id,
         customerName: reservation.customer_name,
@@ -131,7 +128,7 @@ router.post('/book-table', async (req, res) => {
         status: reservation.status,
         tableNumber: table.number,
         section: table.section
-      }
+      } : null
     });
   } catch (err) {
     console.error('Book table error:', err);
