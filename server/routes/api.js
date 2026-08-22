@@ -276,7 +276,7 @@ router.post('/orders/create-full', async (req, res) => {
   try {
     const { order_number, table_id, order_type, subtotal, tax, total, items } = req.body;
     
-    const customer_id = req.user?.id || null;
+    const customer_id = req.user?.role === 'guest' ? null : (req.user?.id || null);
     const customer_name = req.user?.fullName || 'Guest Diner';
 
     const orderRes = await pool.query(
