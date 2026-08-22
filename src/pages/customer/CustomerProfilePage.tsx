@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, Mail, Phone, Award, ShoppingBag, ShieldCheck, Save } from "lucide-react";
+import { User, Mail, Phone, Award, ShoppingBag, ShieldCheck, Save, Sparkles, ArrowRight, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -20,8 +20,13 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 export function CustomerProfilePage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { orders, isLoading: isOrdersLoading } = useOrders();
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/customer/login';
+  };
 
   const [fullName, setFullName] = useState(user?.fullName || "");
   const [email, setEmail] = useState(user?.email || "");
