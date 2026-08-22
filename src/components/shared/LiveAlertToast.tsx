@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Bell, CheckCircle2, AlertTriangle, Info, AlertCircle } from "lucide-react";
+import { X, CheckCircle2, AlertTriangle, Info, AlertCircle } from "lucide-react";
 import { socket } from "@/lib/socket";
 
 interface LiveAlert {
