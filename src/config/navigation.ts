@@ -11,6 +11,7 @@ export const adminNavItems: NavItem[] = [
   { label: "Staff", href: ROUTES.admin.staff, icon: "UserCog" },
   { label: "Analytics", href: ROUTES.admin.analytics, icon: "BarChart3" },
   { label: "Settings", href: ROUTES.admin.settings, icon: "Settings" },
+  { label: "Tables", href: ROUTES.admin.tables, icon: "Grid3X3" },
 ];
 
 export const staffNavItems: NavItem[] = [

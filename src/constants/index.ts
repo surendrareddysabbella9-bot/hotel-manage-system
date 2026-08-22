@@ -38,6 +38,7 @@ export const ROUTES = {
     staff: "/admin/staff",
     analytics: "/admin/analytics",
     settings: "/admin/settings",
+    tables: "/admin/tables",
   },
   scan: {
     table: "/scan/table",
