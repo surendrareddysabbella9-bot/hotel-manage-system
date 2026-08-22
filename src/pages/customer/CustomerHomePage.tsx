@@ -10,11 +10,13 @@ import { ROUTES } from "@/constants";
 import { useMenu } from "@/hooks/useMenu";
 import { useOrders } from "@/hooks/useOrders";
 import { useReservations } from "@/hooks/useReservations";
+import { useCart } from "@/app/providers/CartContext";
 
 export function CustomerHomePage() {
   const { items: menuItems, isLoading: isMenuLoading } = useMenu();
   const { orders, isLoading: isOrdersLoading } = useOrders();
   const { reservations, isLoading: isResLoading } = useReservations();
+  const { addItem } = useCart();
 
   const featuredItems = menuItems.slice(0, 3);
   const activeOrder = orders.find((o) => o.status !== "served" && o.status !== "cancelled");
@@ -114,7 +116,14 @@ export function CustomerHomePage() {
 
         <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {featuredItems.map((item) => (
-            <FoodCard key={item.id} item={item} onAddToCart={() => {}} />
+            <FoodCard 
+              key={item.id} 
+              item={item} 
+              onAddToCart={(i) => {
+                addItem(i);
+                // Optionally show a toast here if we had a toast system globally
+              }} 
+            />
           ))}
         </div>
       </section>
