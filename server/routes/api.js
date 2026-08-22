@@ -139,6 +139,89 @@ router.post('/book-table', async (req, res) => {
   }
 });
 
+// GET /api/orders-full
+router.get('/orders-full', async (req, res) => {
+  try {
+    const userRole = req.user.role;
+    const userId = req.user.id;
+    const fullName = req.user.fullName || 'Guest Diner';
+
+    let orderConditions = '';
+    const values = [];
+
+    if (userRole === 'admin' || userRole === 'staff') {
+      // Admins and staff see all orders
+    } else if (userRole === 'customer') {
+      orderConditions = 'WHERE o.customer_id = $1';
+      values.push(userId);
+    } else if (userRole === 'guest') {
+      orderConditions = 'WHERE o.customer_name = $1';
+      values.push(fullName);
+    } else {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const query = `
+      SELECT 
+        o.id, 
+        o.order_number as "orderNumber", 
+        o.customer_id as "customerId", 
+        o.customer_name as "customerName", 
+        o.table_id as "tableId", 
+        o.status, 
+        o.total, 
+        o.created_at as "createdAt", 
+        o.updated_at as "updatedAt",
+        COALESCE(
+          (SELECT json_agg(
+            json_build_object(
+              'id', oi.id,
+              'menuItemId', oi.menu_item_id,
+              'name', oi.name,
+              'quantity', oi.quantity,
+              'price', oi.unit_price,
+              'notes', oi.notes
+            )
+          ) FROM order_items oi WHERE oi.order_id = o.id), 
+          '[]'::json
+        ) as items,
+        (SELECT json_build_object('id', p.id, 'full_name', p.full_name) FROM profiles p WHERE p.id = o.customer_id) as profile,
+        (SELECT json_build_object('id', t.id, 'number', t.number) FROM restaurant_tables t WHERE t.id = o.table_id) as "tableInfo"
+      FROM orders o
+      ${orderConditions}
+      ORDER BY o.created_at DESC
+    `;
+
+    const result = await pool.query(query, values);
+    
+    // Map it slightly if needed, but it's pretty close to what frontend expects
+    const formatted = result.rows.map(o => {
+      // Fallbacks
+      const cId = o.customerId || o.profile?.id || '';
+      const cName = o.customerName || o.profile?.full_name || 'Guest Diner';
+      const tNum = o.tableInfo?.number || undefined;
+
+      return {
+        id: o.id,
+        orderNumber: o.orderNumber,
+        customerId: cId,
+        customerName: cName,
+        tableNumber: tNum,
+        status: o.status,
+        total: Number(o.total),
+        createdAt: o.createdAt,
+        updatedAt: o.updatedAt,
+        items: o.items
+      };
+    });
+
+    res.json(formatted);
+  } catch (err) {
+    console.error('Error fetching full orders:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Generic GET multiple rows
 router.get('/:table', async (req, res) => {
   const { table } = req.params;

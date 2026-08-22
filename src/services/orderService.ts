@@ -4,40 +4,9 @@ import { socket } from '@/lib/socket';
 
 export const orderService = {
   async getOrders(): Promise<Order[]> {
-    // 1. Fetch base orders
-    const ordersData = await apiFetch('/orders?order=created_at.desc');
-    
-    // 2. We have to manually fetch related data since we lost Supabase joins
-    const itemsData = await apiFetch('/order_items').catch(() => []);
-    const profilesData = await apiFetch('/profiles').catch(() => []);
-    const tablesData = await apiFetch('/restaurant_tables').catch(() => []);
-
-    return ordersData.map((o: any) => {
-      // Manual joins
-      const items = itemsData.filter((i: any) => i.order_id === o.id);
-      const profile = profilesData.find((p: any) => p.id === o.customer_id);
-      const table = tablesData.find((t: any) => String(t.number) === String(o.table_number));
-
-      return {
-        id: o.id,
-        orderNumber: o.order_number,
-        customerId: o.customer_id || profile?.id || '',
-        customerName: o.customer_name || profile?.full_name || 'Guest Diner',
-        tableNumber: table?.number || o.table_number || undefined,
-        status: o.status as OrderStatus,
-        total: Number(o.total),
-        createdAt: o.created_at,
-        updatedAt: o.updated_at,
-        items: items.map((item: any) => ({
-          id: item.id,
-          menuItemId: item.menu_item_id || item.id,
-          name: item.name,
-          quantity: item.quantity,
-          price: Number(item.unit_price),
-          notes: item.notes || undefined,
-        })),
-      };
-    });
+    // We now use the optimized backend SQL JOIN endpoint
+    const ordersData = await apiFetch('/orders-full');
+    return ordersData as Order[];
   },
 
   async createOrder(orderData: any): Promise<any> {

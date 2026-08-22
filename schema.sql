@@ -306,3 +306,9 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_activity ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_sales ENABLE ROW LEVEL SECURITY;
+
+ C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r s _ c u s t o m e r _ i d   O N   o r d e r s ( c u s t o m e r _ i d ) ; 
+ C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r s _ s t a t u s   O N   o r d e r s ( s t a t u s ) ; 
+ C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r s _ c r e a t e d _ a t   O N   o r d e r s ( c r e a t e d _ a t   D E S C ) ; 
+ C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r _ i t e m s _ o r d e r _ i d   O N   o r d e r _ i t e m s ( o r d e r _ i d ) ;  
+ 
