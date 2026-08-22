@@ -106,6 +106,7 @@ export function CustomerProfilePage() {
             <CardTitle className="text-lg font-bold relative z-10">{fullName || "Valued Diner"}</CardTitle>
             <p className="text-xs text-muted-foreground relative z-10">{email}</p>
           </CardHeader>
+          <CardContent className="space-y-4 pt-4 border-t border-border/50 text-xs">
             {user?.role === 'guest' ? (
               <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-background/50 shadow-xl group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/10 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
@@ -211,6 +212,7 @@ export function CustomerProfilePage() {
                       disabled
                       className="pl-9 bg-muted/50 cursor-not-allowed"
                     />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
