@@ -26,8 +26,12 @@ export function CartPage() {
 
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [selectedTableId, setSelectedTableId] = useState<string>("");
-  const [orderType, setOrderType] = useState<"dine_in" | "takeout">("dine_in");
+  const [selectedTableId, setSelectedTableId] = useState<string>(
+    sessionStorage.getItem('activeTableId') || ""
+  );
+  const [orderType, setOrderType] = useState<"dine_in" | "takeout">(
+    sessionStorage.getItem('activeTableId') ? "dine_in" : "dine_in"
+  );
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
@@ -211,6 +215,7 @@ export function CartPage() {
                       variant={orderType === "dine_in" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setOrderType("dine_in")}
+                      disabled={!!sessionStorage.getItem('activeTableId')}
                     >
                       Dine In
                     </Button>
@@ -218,6 +223,7 @@ export function CartPage() {
                       variant={orderType === "takeout" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setOrderType("takeout")}
+                      disabled={!!sessionStorage.getItem('activeTableId')}
                     >
                       Takeout
                     </Button>
@@ -227,19 +233,26 @@ export function CartPage() {
                 {orderType === "dine_in" && (
                   <div className="space-y-2">
                     <Label htmlFor="tableSelect">Select Table</Label>
-                    <select
-                      id="tableSelect"
-                      value={selectedTableId}
-                      onChange={(e) => setSelectedTableId(e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Select an available table...</option>
-                      {availableTables.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          Table #{t.number} ({t.section} - {t.capacity} Seats)
-                        </option>
-                      ))}
-                    </select>
+                    {sessionStorage.getItem('activeTableId') ? (
+                      <div className="w-full rounded-md border border-input bg-muted px-3 py-2 text-sm shadow-xs flex items-center justify-between">
+                        <span>Table #{sessionStorage.getItem('activeTableNumber')} (Active Session)</span>
+                        <Badge variant="success">Seated</Badge>
+                      </div>
+                    ) : (
+                      <select
+                        id="tableSelect"
+                        value={selectedTableId}
+                        onChange={(e) => setSelectedTableId(e.target.value)}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus:ring-1 focus:ring-ring"
+                      >
+                        <option value="">Select an available table...</option>
+                        {availableTables.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            Table #{t.number} ({t.section} - {t.capacity} Seats)
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                 )}
               </CardContent>

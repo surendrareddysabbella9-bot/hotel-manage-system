@@ -126,6 +126,11 @@ export function ScanTablePage() {
 
     try {
       const result = await scanService.bookTable(table.number, partySize);
+      
+      // Save active table session
+      sessionStorage.setItem('activeTableId', table.id);
+      sessionStorage.setItem('activeTableNumber', table.number.toString());
+      
       setBookingResult(result);
       setStep("confirmed");
     } catch (err: any) {

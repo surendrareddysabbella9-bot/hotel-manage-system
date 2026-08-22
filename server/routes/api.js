@@ -136,6 +136,39 @@ router.post('/book-table', async (req, res) => {
   }
 });
 
+// POST /api/end-session — Allows a customer or guest to end their dining session and clear the table
+router.post('/end-session', async (req, res) => {
+  const { tableNumber } = req.body;
+  if (!tableNumber) return res.status(400).json({ error: 'Table number is required' });
+
+  try {
+    const tableRes = await pool.query('SELECT id, number FROM restaurant_tables WHERE number = $1', [tableNumber]);
+    if (tableRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Table not found' });
+    }
+    const table = tableRes.rows[0];
+
+    // Mark the table as available
+    await pool.query('UPDATE restaurant_tables SET status = $1 WHERE id = $2', ['available', table.id]);
+    
+    // Broadcast real-time event to clear table on staff screens
+    if (req.io) {
+      req.io.emit('restaurant_tables_updated', { ...table, status: 'available' });
+      req.io.emit('live_alert', {
+        type: 'success',
+        title: 'Table Cleared',
+        message: `Table #${table.number} is now available`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.json({ success: true, message: 'Session ended successfully' });
+  } catch (err) {
+    console.error('End session error:', err);
+    res.status(500).json({ error: 'Failed to end session' });
+  }
+});
+
 // GET /api/orders-full
 router.get('/orders-full', async (req, res) => {
   try {

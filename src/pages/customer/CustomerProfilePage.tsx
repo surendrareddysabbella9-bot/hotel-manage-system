@@ -106,17 +106,36 @@ export function CustomerProfilePage() {
             <CardTitle className="text-lg font-bold relative z-10">{fullName || "Valued Diner"}</CardTitle>
             <p className="text-xs text-muted-foreground relative z-10">{email}</p>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4 border-t border-border/50 text-xs">
             {user?.role === 'guest' ? (
-              <div className="text-center p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
-                <ShieldCheck className="size-8 mx-auto text-primary opacity-50" />
-                <h4 className="font-semibold text-sm">Guest Session</h4>
-                <p className="text-xs text-muted-foreground">
-                  You are currently dining as a guest. Create an account to earn reward points and track your history!
-                </p>
-                <Button className="w-full mt-2 text-xs h-8" variant="default" onClick={() => window.location.href = '/customer/login'}>
-                  Sign Up / Login
-                </Button>
+              <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-background/50 shadow-xl group">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/10 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute -top-10 -right-10 size-40 bg-primary/20 blur-3xl rounded-full" />
+                <div className="absolute -bottom-10 -left-10 size-40 bg-warning/20 blur-3xl rounded-full" />
+                
+                <div className="relative p-6 text-center space-y-4">
+                  <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/50 text-primary-foreground shadow-lg shadow-primary/20 animate-pulse">
+                    <Sparkles className="size-7" />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-lg text-foreground tracking-tight">Unlock Premium Dining</h4>
+                    <p className="text-xs text-muted-foreground max-w-[250px] mx-auto leading-relaxed">
+                      You're currently dining as a guest. Create a free account now to instantly earn points for this meal and unlock exclusive future rewards!
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full relative overflow-hidden group/btn font-semibold tracking-wide" 
+                      onClick={() => window.location.href = '/customer/login'}
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        Create Account <ArrowRight className="size-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -192,9 +211,7 @@ export function CustomerProfilePage() {
                       disabled
                       className="pl-9 bg-muted/50 cursor-not-allowed"
                     />
-                  </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <div className="relative">
@@ -249,6 +266,35 @@ export function CustomerProfilePage() {
               </Card>
             ))}
           </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 justify-center pt-8">
+        <Button variant="outline" className="w-full max-w-sm mx-auto text-destructive hover:bg-destructive/10" onClick={handleLogout}>
+          <LogOut className="size-4 mr-2" /> Sign Out
+        </Button>
+        
+        {sessionStorage.getItem('activeTableNumber') && (
+          <Button 
+            variant="destructive" 
+            className="w-full max-w-sm mx-auto shadow-lg shadow-destructive/20" 
+            onClick={async () => {
+              try {
+                await fetch('https://hotel-manage-system.onrender.com/api/end-session', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ tableNumber: parseInt(sessionStorage.getItem('activeTableNumber')!) })
+                });
+                sessionStorage.removeItem('activeTableId');
+                sessionStorage.removeItem('activeTableNumber');
+                handleLogout();
+              } catch (err) {
+                console.error("Failed to end session:", err);
+              }
+            }}
+          >
+            <ShieldCheck className="size-4 mr-2" /> End Dining Session & Leave Table
+          </Button>
         )}
       </div>
     </div>
