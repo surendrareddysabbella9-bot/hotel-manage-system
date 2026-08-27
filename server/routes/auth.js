@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
 import { pool } from '../db.js';
 
 const router = express.Router();
@@ -52,10 +53,13 @@ router.post('/signup', authLimiter, async (req, res) => {
       securityAnswerHash = await bcrypt.hash(securityAnswer.toLowerCase().trim(), 10);
     }
 
+    const userId = crypto.randomUUID();
+    await pool.query("INSERT INTO auth.users (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING", [userId, email]);
+
     const insertRes = await pool.query(
-      `INSERT INTO profiles (role_id, email, full_name, password_hash, security_question, security_answer_hash) 
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, full_name, created_at`,
-      [roleId, email, fullName, passwordHash, securityQuestion || null, securityAnswerHash]
+      `INSERT INTO profiles (id, role_id, email, full_name, password_hash, security_question, security_answer_hash) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, full_name, created_at`,
+      [userId, roleId, email, fullName, passwordHash, securityQuestion || null, securityAnswerHash]
     );
 
     const user = insertRes.rows[0];
@@ -248,9 +252,12 @@ router.post('/google', async (req, res) => {
       }
       const roleId = roleRes.rows[0].id;
       
+      const userId = crypto.randomUUID();
+      await pool.query("INSERT INTO auth.users (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING", [userId, email]);
+
       const insertRes = await pool.query(
-        `INSERT INTO profiles (role_id, email, full_name, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, full_name, created_at`,
-        [roleId, email, fullName, passwordHash]
+        `INSERT INTO profiles (id, role_id, email, full_name, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, full_name, created_at`,
+        [userId, roleId, email, fullName, passwordHash]
       );
       user = insertRes.rows[0];
       user.role_name = 'Customer';

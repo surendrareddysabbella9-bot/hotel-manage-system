@@ -37,7 +37,7 @@ async function main() {
   try {
     console.log("🚀 Checking database setup...");
 
-    // Check if database is already initialized by looking for 'reservations' table
+    // Check if database is already initialized and seeded
     const checkTable = await client.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -47,8 +47,15 @@ async function main() {
     `);
 
     if (checkTable.rows[0].exists) {
-      console.log("ℹ️ Database is already initialized (reservations table exists). Skipping full schema/seed reload.");
-      return;
+      try {
+        const checkSeed = await client.query(`SELECT COUNT(*) FROM menu_items;`);
+        if (parseInt(checkSeed.rows[0].count, 10) > 0) {
+          console.log("ℹ️ Database is already initialized and seeded with menu items. Skipping full reload.");
+          return;
+        }
+      } catch (err) {
+        console.log("⚠️ Core tables missing menu items count, running full init...");
+      }
     }
 
     console.log("⏳ Initializing brand new PostgreSQL database...");
