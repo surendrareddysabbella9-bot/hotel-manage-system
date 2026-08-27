@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useMenu } from "@/hooks/useMenu";
+import { FALLBACK_FOOD_IMAGE } from "@/lib/utils";
 import type { MenuItem } from "@/types";
 
 export function MenuManagementPage() {
@@ -86,7 +87,15 @@ export function MenuManagementPage() {
           {filteredItems.map((item) => (
             <div key={item.id} className="rounded-xl border border-border bg-card p-4 space-y-3 flex flex-col justify-between">
               <div className="flex gap-3">
-                <img src={item.imageUrl} alt={item.name} className="size-16 rounded-lg object-cover shrink-0" />
+                <img 
+                  src={item.imageUrl || FALLBACK_FOOD_IMAGE} 
+                  alt={item.name} 
+                  className="size-16 rounded-lg object-cover shrink-0" 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = FALLBACK_FOOD_IMAGE;
+                  }}
+                />
                 <div className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="font-semibold text-sm">{item.name}</h4>

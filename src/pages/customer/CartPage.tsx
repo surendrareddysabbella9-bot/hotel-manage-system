@@ -17,6 +17,7 @@ import { AIRecommendations } from "@/components/customer/AIRecommendations";
 import { useCart } from "@/hooks/useCart";
 import { orderService } from "@/services/orderService";
 import { useAuth } from "@/app/providers/AuthContext";
+import { FALLBACK_FOOD_IMAGE } from "@/lib/utils";
 
 export function CartPage() {
   const navigate = useNavigate();
@@ -153,9 +154,13 @@ export function CartPage() {
                 {cart.map((item) => (
                   <div key={item.id} className="py-4 flex gap-4 items-center">
                     <img
-                      src={item.imageUrl}
+                      src={item.imageUrl || FALLBACK_FOOD_IMAGE}
                       alt={item.name}
                       className="size-16 rounded-xl object-cover shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = FALLBACK_FOOD_IMAGE;
+                      }}
                     />
                     <div className="flex-1 space-y-1">
                       <h4 className="font-semibold text-sm">{item.name}</h4>

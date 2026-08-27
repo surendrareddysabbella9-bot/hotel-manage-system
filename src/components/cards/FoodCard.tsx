@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, FALLBACK_FOOD_IMAGE } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { MenuItem } from "@/types";
 
@@ -24,10 +24,14 @@ export function FoodCard({ item, onAddToCart, className }: FoodCardProps) {
       <Card className="h-full flex flex-col overflow-hidden bg-background/60 backdrop-blur-xl border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <div className="relative h-48 shrink-0 overflow-hidden">
           <img
-            src={item.imageUrl}
+            src={item.imageUrl || FALLBACK_FOOD_IMAGE}
             alt={item.name}
             className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = FALLBACK_FOOD_IMAGE;
+            }}
           />
           {item.popular && (
             <Badge className="absolute left-3 top-3 gap-1" variant="warning">

@@ -4,6 +4,7 @@ import { aiService } from "@/services/aiService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMenu } from "@/hooks/useMenu";
+import { FALLBACK_FOOD_IMAGE } from "@/lib/utils";
 
 interface AIRecommendationsProps {
   cart: any[];
@@ -66,7 +67,15 @@ export function AIRecommendations({ cart, onAdd }: AIRecommendationsProps) {
                 <Card key={item.id} className="overflow-hidden border-border opacity-70 hover:opacity-100 transition-opacity">
                   <CardContent className="p-3 flex items-center gap-3 bg-muted/30">
                     {item.imageUrl && (
-                      <img src={item.imageUrl} alt={item.name} className="size-12 rounded-md object-cover" />
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.name} 
+                        className="size-12 rounded-md object-cover" 
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_FOOD_IMAGE;
+                        }}
+                      />
                     )}
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold line-clamp-1">{item.name}</h4>
@@ -96,8 +105,16 @@ export function AIRecommendations({ cart, onAdd }: AIRecommendationsProps) {
           {recommendations.map((item) => (
             <Card key={item.id} className="overflow-hidden border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)] hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-shadow">
               <CardContent className="p-3 flex items-center gap-3 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
-                {item.image_url && (
-                  <img src={item.image_url} alt={item.name} className="size-12 rounded-md object-cover ring-2 ring-indigo-500/20" />
+                {(item.image_url || item.imageUrl) && (
+                  <img 
+                    src={item.image_url || item.imageUrl} 
+                    alt={item.name} 
+                    className="size-12 rounded-md object-cover ring-2 ring-indigo-500/20" 
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = FALLBACK_FOOD_IMAGE;
+                    }}
+                  />
                 )}
                 <div className="flex-1">
                   <h4 className="text-sm font-semibold line-clamp-1">{item.name}</h4>
