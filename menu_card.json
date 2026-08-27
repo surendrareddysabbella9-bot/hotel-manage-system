@@ -1,0 +1,718 @@
+[
+  {
+    "category": "Starters & Appetizers",
+    "description": "Crispy kebabs, tikka specialties, and quick bites",
+    "items": [
+      {
+        "name": "Paneer Tikka Achari",
+        "description": "Cottage cheese marinated in pickle spices and grilled",
+        "price": 280.0,
+        "preparation_time": 15,
+        "popular": true,
+        "tags": ["vegetarian", "spicy"]
+      },
+      {
+        "name": "Hara Bhara Kebab",
+        "description": "Spinach and green pea patties served with mint chutney",
+        "price": 240.0,
+        "preparation_time": 12,
+        "popular": false,
+        "tags": ["vegetarian", "healthy"]
+      },
+      {
+        "name": "Crispy Corn Pepper Salt",
+        "description": "Crispy fried sweet corn tossed with garlic and peppers",
+        "price": 220.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Dahi Ke Kebab",
+        "description": "Velvety hung curd patties spiced with cardamom and green chilies",
+        "price": 260.0,
+        "preparation_time": 15,
+        "popular": true,
+        "tags": ["vegetarian", "signature"]
+      },
+      {
+        "name": "Samosa Chaat",
+        "description": "Crushed samosas topped with chickpeas, yogurt and chutneys",
+        "price": 180.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["vegetarian", "street-food"]
+      },
+      {
+        "name": "Chicken 65",
+        "description": "Spicy deep-fried chicken bites flavored with curry leaves",
+        "price": 320.0,
+        "preparation_time": 15,
+        "popular": true,
+        "tags": ["non-veg", "spicy"]
+      },
+      {
+        "name": "Amritsari Fish Fry",
+        "description": "Crispy gram flour battered carps with chaat masala",
+        "price": 360.0,
+        "preparation_time": 18,
+        "popular": false,
+        "tags": ["non-veg", "seafood"]
+      },
+      {
+        "name": "Veg Spring Rolls",
+        "description": "Golden fried rolls stuffed with shredded vegetables",
+        "price": 200.0,
+        "preparation_time": 12,
+        "popular": false,
+        "tags": ["vegetarian"]
+      }
+    ]
+  },
+  {
+    "category": "Soups & Salads",
+    "description": "Warming shorbas, fresh salads and light appetizers",
+    "items": [
+      {
+        "name": "Tomato Dhaniya Shorba",
+        "description": "Traditional coriander and fresh ripe tomato broth",
+        "price": 150.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["vegetarian", "soup"]
+      },
+      {
+        "name": "Chicken Badami Shorba",
+        "description": "Rich chicken broth simmered with almond paste and herbs",
+        "price": 190.0,
+        "preparation_time": 12,
+        "popular": false,
+        "tags": ["non-veg", "soup"]
+      },
+      {
+        "name": "Sweet Corn Veg Soup",
+        "description": "Classic sweet corn soup with minced seasonal vegetables",
+        "price": 140.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Hot & Sour Chicken Soup",
+        "description": "Spicy sour chicken soup with bamboo shoots and mushrooms",
+        "price": 180.0,
+        "preparation_time": 12,
+        "popular": false,
+        "tags": ["non-veg", "spicy"]
+      },
+      {
+        "name": "Kachumber Salad",
+        "description": "Diced cucumbers, tomatoes, and onions with lemon dressing",
+        "price": 110.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian", "healthy"]
+      },
+      {
+        "name": "Tandoori Chicken Salad",
+        "description": "Grilled chicken strips on a bed of fresh garden greens",
+        "price": 240.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["non-veg", "healthy"]
+      },
+      {
+        "name": "Sprouted Moong Salad",
+        "description": "Steamed moong sprouts with pomegranate seeds and chaat masala",
+        "price": 130.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian", "healthy"]
+      },
+      {
+        "name": "Clear Mushroom Soup",
+        "description": "Light broth infused with button mushrooms and spring onion",
+        "price": 160.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["vegetarian"]
+      }
+    ]
+  },
+  {
+    "category": "Tandoori & Kebabs",
+    "description": "Clay oven roasted meats, paneer, and chargrilled specialties",
+    "items": [
+      {
+        "name": "Tandoori Murgh (Half)",
+        "description": "Classic bone-in chicken marinated in yogurt and spices",
+        "price": 340.0,
+        "preparation_time": 20,
+        "popular": true,
+        "tags": ["non-veg", "bestseller"]
+      },
+      {
+        "name": "Murgh Malai Tikka",
+        "description": "Tender chicken morsels in cream and cashew marinade",
+        "price": 380.0,
+        "preparation_time": 20,
+        "popular": true,
+        "tags": ["non-veg", "signature"]
+      },
+      {
+        "name": "Mutton Seekh Kebab",
+        "description": "Minced spiced mutton skewer roasted in clay oven",
+        "price": 420.0,
+        "preparation_time": 22,
+        "popular": true,
+        "tags": ["non-veg", "chef-special"]
+      },
+      {
+        "name": "Tandoori Paneer Tikka",
+        "description": "Classic tandoori cottage cheese cubes with bell peppers",
+        "price": 300.0,
+        "preparation_time": 15,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Tandoori Soya Chaap",
+        "description": "Soya chaap marinated in tikka spices and charred",
+        "price": 270.0,
+        "preparation_time": 15,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Bhatti Da Murgh",
+        "description": "Robust smoky charcoal chicken seasoned with bhatti masala",
+        "price": 360.0,
+        "preparation_time": 20,
+        "popular": false,
+        "tags": ["non-veg", "spicy"]
+      },
+      {
+        "name": "Tandoori Prawns",
+        "description": "Jumbo prawns marinated in ajwain and lemon juice",
+        "price": 550.0,
+        "preparation_time": 20,
+        "popular": false,
+        "tags": ["non-veg", "seafood"]
+      },
+      {
+        "name": "Veg Tandoori Platter",
+        "description": "Assortment of Paneer Tikka, Hara Bhara Kebab and Soya Kebab",
+        "price": 520.0,
+        "preparation_time": 22,
+        "popular": false,
+        "tags": ["vegetarian", "platter"]
+      }
+    ]
+  },
+  {
+    "category": "Main Course - Veg",
+    "description": "Rich vegetarian gravies, paneer, and lentils",
+    "items": [
+      {
+        "name": "Paneer Butter Masala",
+        "description": "Cottage cheese in rich creamy tomato and butter gravy",
+        "price": 320.0,
+        "preparation_time": 18,
+        "popular": true,
+        "tags": ["vegetarian", "bestseller"]
+      },
+      {
+        "name": "Dal Makhani",
+        "description": "Slow cooked black lentils with fresh cream and butter",
+        "price": 290.0,
+        "preparation_time": 20,
+        "popular": true,
+        "tags": ["vegetarian", "bestseller"]
+      },
+      {
+        "name": "Palak Paneer",
+        "description": "Fresh spinach purée cooked with cottage cheese cubes",
+        "price": 310.0,
+        "preparation_time": 18,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Malai Kofta",
+        "description": "Fried stuffed cottage cheese balls in cashew cream gravy",
+        "price": 340.0,
+        "preparation_time": 20,
+        "popular": true,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Kadhai Paneer",
+        "description": "Paneer cooked with bell peppers and freshly ground kadhai spices",
+        "price": 320.0,
+        "preparation_time": 18,
+        "popular": false,
+        "tags": ["vegetarian", "spicy"]
+      },
+      {
+        "name": "Mix Vegetable Handi",
+        "description": "Assorted seasonal vegetables cooked in a traditional handi",
+        "price": 270.0,
+        "preparation_time": 15,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Yellow Dal Tadka",
+        "description": "Yellow lentils tempered with cumin, garlic and red chilies",
+        "price": 220.0,
+        "preparation_time": 12,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Chana Masala",
+        "description": "Spiced North Indian chickpeas simmered in onion-tomato gravy",
+        "price": 240.0,
+        "preparation_time": 15,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Bhindi Masala",
+        "description": "Pan-fried okra cooked with chopped onions and dry spices",
+        "price": 230.0,
+        "preparation_time": 15,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Mushroom Do Pyaza",
+        "description": "Button mushrooms cooked with caramelized onions",
+        "price": 290.0,
+        "preparation_time": 18,
+        "popular": false,
+        "tags": ["vegetarian"]
+      }
+    ]
+  },
+  {
+    "category": "Main Course - Non-Veg",
+    "description": "Chef special chicken, mutton, and seafood curries",
+    "items": [
+      {
+        "name": "Butter Chicken (Murgh Makhani)",
+        "description": "Tender tandoori chicken cooked in rich tomato butter sauce",
+        "price": 420.0,
+        "preparation_time": 20,
+        "popular": true,
+        "tags": ["non-veg", "bestseller"]
+      },
+      {
+        "name": "Chicken Tikka Masala",
+        "description": "Grilled chicken tikka in spiced onion tomato gravy",
+        "price": 410.0,
+        "preparation_time": 20,
+        "popular": true,
+        "tags": ["non-veg"]
+      },
+      {
+        "name": "Kadhai Chicken",
+        "description": "Chicken cooked with capsicum and roasted kadhai spices",
+        "price": 390.0,
+        "preparation_time": 18,
+        "popular": false,
+        "tags": ["non-veg", "spicy"]
+      },
+      {
+        "name": "Mutton Rogan Josh",
+        "description": "Kashmiri style slow braised mutton curry with ratanjot",
+        "price": 480.0,
+        "preparation_time": 25,
+        "popular": true,
+        "tags": ["non-veg", "signature"]
+      },
+      {
+        "name": "Mutton Rara",
+        "description": "Minced mutton and tender mutton pieces cooked together",
+        "price": 510.0,
+        "preparation_time": 25,
+        "popular": false,
+        "tags": ["non-veg", "spicy"]
+      },
+      {
+        "name": "Goan Fish Curry",
+        "description": "Coastal fish curry with coconut milk and tamarind",
+        "price": 450.0,
+        "preparation_time": 20,
+        "popular": false,
+        "tags": ["non-veg", "seafood"]
+      },
+      {
+        "name": "Prawn Masala",
+        "description": "Juicy prawns tossed in spicy onion tomato masala",
+        "price": 560.0,
+        "preparation_time": 20,
+        "popular": false,
+        "tags": ["non-veg", "seafood"]
+      },
+      {
+        "name": "Chicken Korma",
+        "description": "Mild chicken curry cooked in creamy cashew paste",
+        "price": 400.0,
+        "preparation_time": 20,
+        "popular": false,
+        "tags": ["non-veg"]
+      },
+      {
+        "name": "Egg Curry (2 Eggs)",
+        "description": "Boiled eggs cooked in North Indian home style gravy",
+        "price": 220.0,
+        "preparation_time": 15,
+        "popular": false,
+        "tags": ["non-veg"]
+      },
+      {
+        "name": "Chicken Saagwala",
+        "description": "Chicken simmered in spiced fresh spinach purée",
+        "price": 390.0,
+        "preparation_time": 18,
+        "popular": false,
+        "tags": ["non-veg"]
+      }
+    ]
+  },
+  {
+    "category": "Biryani & Rice",
+    "description": "Fragrant dum biryanis, pulao, and basmati rice",
+    "items": [
+      {
+        "name": "Hyderabadi Dum Chicken Biryani",
+        "description": "Fragrant basmati rice layered with marinated chicken and saffron",
+        "price": 380.0,
+        "preparation_time": 25,
+        "popular": true,
+        "tags": ["non-veg", "bestseller"]
+      },
+      {
+        "name": "Mutton Dum Biryani",
+        "description": "Royal slow-cooked mutton biryani served with mirchi ka salan",
+        "price": 460.0,
+        "preparation_time": 25,
+        "popular": true,
+        "tags": ["non-veg", "signature"]
+      },
+      {
+        "name": "Veg Dum Biryani",
+        "description": "Long grain rice cooked with garden vegetables and aromatic spices",
+        "price": 280.0,
+        "preparation_time": 20,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Paneer Tikka Biryani",
+        "description": "Tandoori paneer tikka layered in spiced basmati rice",
+        "price": 320.0,
+        "preparation_time": 20,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Jeera Rice",
+        "description": "Basmati rice tempered with cumin seeds and ghee",
+        "price": 160.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Steamed Basmati Rice",
+        "description": "Fluffy long grain steamed basmati rice",
+        "price": 130.0,
+        "preparation_time": 10,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Veg Peas Pulao",
+        "description": "Basmati rice cooked with sweet green peas and whole spices",
+        "price": 180.0,
+        "preparation_time": 12,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Egg Biryani",
+        "description": "Spiced basmati rice cooked with boiled eggs and herbs",
+        "price": 260.0,
+        "preparation_time": 18,
+        "popular": false,
+        "tags": ["non-veg"]
+      }
+    ]
+  },
+  {
+    "category": "Indian Breads",
+    "description": "Freshly baked tandoori naans, rotis, and stuffed parathas",
+    "items": [
+      {
+        "name": "Butter Naan",
+        "description": "Leavened tandoori flatbread brushed with butter",
+        "price": 60.0,
+        "preparation_time": 5,
+        "popular": true,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Garlic Naan",
+        "description": "Flavored naan topped with minced garlic and coriander",
+        "price": 75.0,
+        "preparation_time": 5,
+        "popular": true,
+        "tags": ["vegetarian", "bestseller"]
+      },
+      {
+        "name": "Cheese Garlic Naan",
+        "description": "Naan stuffed with melting mozzarella and garlic",
+        "price": 110.0,
+        "preparation_time": 7,
+        "popular": true,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Tandoori Roti",
+        "description": "Whole wheat bread baked in clay oven",
+        "price": 30.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Butter Roti",
+        "description": "Whole wheat tandoori roti with butter",
+        "price": 35.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Laccha Paratha",
+        "description": "Layered crispy whole wheat flatbread",
+        "price": 65.0,
+        "preparation_time": 7,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Missi Roti",
+        "description": "Gram flour and spices baked flatbread",
+        "price": 50.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Amritsari Kulcha",
+        "description": "Crispy flatbread stuffed with spiced potatoes and paneer",
+        "price": 120.0,
+        "preparation_time": 8,
+        "popular": false,
+        "tags": ["vegetarian"]
+      }
+    ]
+  },
+  {
+    "category": "Desserts & Sweets",
+    "description": "Traditional mithai, gulab jamun, and ice creams",
+    "items": [
+      {
+        "name": "Gulab Jamun (2 Pcs)",
+        "description": "Warm milk-solid dumplings soaked in rose sugar syrup",
+        "price": 120.0,
+        "preparation_time": 5,
+        "popular": true,
+        "tags": ["vegetarian", "bestseller"]
+      },
+      {
+        "name": "Rasmalai (2 Pcs)",
+        "description": "Soft cottage cheese discs soaked in saffron cardamom milk",
+        "price": 140.0,
+        "preparation_time": 5,
+        "popular": true,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Gajar Ka Halwa",
+        "description": "Classic North Indian winter carrot pudding with nuts and khoya",
+        "price": 150.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Kesari Phirni",
+        "description": "Chilled traditional rice pudding flavored with saffron and pistachio",
+        "price": 130.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Matka Kulfi",
+        "description": "Rich creamy clay-pot kulfi topped with dry fruits",
+        "price": 110.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Sizzling Brownie with Ice Cream",
+        "description": "Hot chocolate brownie served on sizzler plate with vanilla ice cream",
+        "price": 220.0,
+        "preparation_time": 8,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Moong Dal Halwa",
+        "description": "Rich sweet halwa made from yellow lentils and ghee",
+        "price": 160.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Shahi Tukda",
+        "description": "Crispy fried bread soaked in rabri and cardamom syrup",
+        "price": 140.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["vegetarian"]
+      }
+    ]
+  },
+  {
+    "category": "Beverages & Lassi",
+    "description": "Refreshing lassis, coolers, chai, and mocktails",
+    "items": [
+      {
+        "name": "Mango Lassi",
+        "description": "Chilled thick yogurt drink blended with Alphonso mango pulp",
+        "price": 120.0,
+        "preparation_time": 5,
+        "popular": true,
+        "tags": ["beverage", "bestseller"]
+      },
+      {
+        "name": "Sweet Punjabi Lassi",
+        "description": "Traditional churning yogurt drink topped with malai",
+        "price": 100.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["beverage"]
+      },
+      {
+        "name": "Masala Chaas",
+        "description": "Spiced buttermilk with roasted cumin and coriander",
+        "price": 70.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["beverage", "healthy"]
+      },
+      {
+        "name": "Fresh Lime Soda",
+        "description": "Refreshing soda served sweet, salted, or mixed",
+        "price": 80.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["beverage"]
+      },
+      {
+        "name": "Virgin Mojito",
+        "description": "Cooler made with muddled mint, lime, and sparkling soda",
+        "price": 140.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["beverage"]
+      },
+      {
+        "name": "Masala Cutting Chai",
+        "description": "Authentic Indian spiced tea brewed with ginger and cardamom",
+        "price": 40.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["beverage"]
+      },
+      {
+        "name": "South Indian Filter Coffee",
+        "description": "Traditional strong brewed coffee served in dabara set",
+        "price": 60.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["beverage"]
+      },
+      {
+        "name": "Iced Cold Coffee",
+        "description": "Blended iced coffee with vanilla ice cream scoop",
+        "price": 130.0,
+        "preparation_time": 5,
+        "popular": false,
+        "tags": ["beverage"]
+      }
+    ]
+  },
+  {
+    "category": "Chef Signature Specials",
+    "description": "Exclusive regional royal dining creations",
+    "items": [
+      {
+        "name": "Raan-E-Khaas",
+        "description": "Whole leg of lamb slow roasted with royal spices",
+        "price": 1250.0,
+        "preparation_time": 35,
+        "popular": true,
+        "tags": ["non-veg", "chef-special"]
+      },
+      {
+        "name": "Lobster Butter Masala",
+        "description": "Fresh lobster tail cooked in rich tomato makhani sauce",
+        "price": 1100.0,
+        "preparation_time": 25,
+        "popular": true,
+        "tags": ["non-veg", "seafood"]
+      },
+      {
+        "name": "Truffle Butter Naan",
+        "description": "Artisanal naan dough brushed with black truffle butter",
+        "price": 180.0,
+        "preparation_time": 8,
+        "popular": false,
+        "tags": ["vegetarian"]
+      },
+      {
+        "name": "Royal Maharaja Thali",
+        "description": "Grand thali featuring 12 signature veg and non-veg delicacies",
+        "price": 850.0,
+        "preparation_time": 25,
+        "popular": true,
+        "tags": ["non-veg", "thali"]
+      },
+      {
+        "name": "Nalli Nihari",
+        "description": "Slow cooked mutton shank stew with traditional nihari masala",
+        "price": 620.0,
+        "preparation_time": 30,
+        "popular": false,
+        "tags": ["non-veg"]
+      },
+      {
+        "name": "Zafrani Paneer Pasanda",
+        "description": "Stuffed paneer slabs in rich saffron cashew gravy",
+        "price": 420.0,
+        "preparation_time": 22,
+        "popular": false,
+        "tags": ["vegetarian"]
+      }
+    ]
+  }
+]

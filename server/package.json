@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node alter_profiles.js && node index.js",
+    "start": "node init_db.js && node alter_profiles.js && node index.js",
+    "setup-db": "node init_db.js && node alter_profiles.js",
     "dev": "nodemon index.js"
   },
   "dependencies": {

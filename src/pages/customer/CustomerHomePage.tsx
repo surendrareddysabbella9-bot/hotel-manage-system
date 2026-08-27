@@ -10,13 +10,13 @@ import { ROUTES } from "@/constants";
 import { useMenu } from "@/hooks/useMenu";
 import { useOrders } from "@/hooks/useOrders";
 import { useReservations } from "@/hooks/useReservations";
-import { useCart } from "@/app/providers/CartContext";
+import { useCart } from "@/hooks/useCart";
 
 export function CustomerHomePage() {
   const { items: menuItems, isLoading: isMenuLoading } = useMenu();
   const { orders, isLoading: isOrdersLoading } = useOrders();
   const { reservations, isLoading: isResLoading } = useReservations();
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
 
   const featuredItems = menuItems.slice(0, 3);
   const activeOrder = orders.find((o) => o.status !== "served" && o.status !== "cancelled");
@@ -120,8 +120,13 @@ export function CustomerHomePage() {
               key={item.id} 
               item={item} 
               onAddToCart={(i) => {
-                addItem(i);
-                // Optionally show a toast here if we had a toast system globally
+                addToCart({
+                  id: i.id,
+                  menuItemId: i.id,
+                  name: i.name,
+                  price: i.price,
+                  imageUrl: i.imageUrl || ""
+                });
               }} 
             />
           ))}
