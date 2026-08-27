@@ -7,17 +7,71 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 2. ENUM TYPES
-CREATE TYPE user_role AS ENUM ('admin', 'staff', 'customer');
-CREATE TYPE staff_role AS ENUM ('chef', 'waiter', 'manager', 'host');
-CREATE TYPE staff_status AS ENUM ('active', 'off_duty', 'on_break');
-CREATE TYPE order_status AS ENUM ('pending', 'cooking', 'ready', 'served', 'cancelled');
-CREATE TYPE order_type AS ENUM ('dine_in', 'takeout', 'delivery');
-CREATE TYPE table_status AS ENUM ('available', 'occupied', 'reserved', 'cleaning');
-CREATE TYPE reservation_status AS ENUM ('confirmed', 'pending', 'seated', 'completed', 'cancelled');
-CREATE TYPE inventory_status AS ENUM ('in_stock', 'low_stock', 'out_of_stock');
-CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'refunded');
-CREATE TYPE payment_method AS ENUM ('cash', 'card', 'online', 'upi');
-CREATE TYPE notification_type AS ENUM ('info', 'success', 'warning', 'error');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('admin', 'staff', 'customer');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE staff_role AS ENUM ('chef', 'waiter', 'manager', 'host');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE staff_status AS ENUM ('active', 'off_duty', 'on_break');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE order_status AS ENUM ('pending', 'cooking', 'ready', 'served', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE order_type AS ENUM ('dine_in', 'takeout', 'delivery');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE table_status AS ENUM ('available', 'occupied', 'reserved', 'cleaning');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE reservation_status AS ENUM ('confirmed', 'pending', 'seated', 'completed', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE inventory_status AS ENUM ('in_stock', 'low_stock', 'out_of_stock');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'refunded');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_method AS ENUM ('cash', 'card', 'online', 'upi');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE notification_type AS ENUM ('info', 'success', 'warning', 'error');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- 3. HELPER FUNCTION: AUTOMATIC updated_at TIMESTAMP
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -33,7 +87,7 @@ $$ LANGUAGE plpgsql;
 -- ====================================================================
 
 -- 4.1 ROLES
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
@@ -42,7 +96,7 @@ CREATE TABLE roles (
 );
 
 -- 4.2 PROFILES (Extends Supabase auth.users)
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     role_id UUID NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
     email TEXT UNIQUE NOT NULL,
@@ -56,7 +110,7 @@ CREATE TABLE profiles (
 );
 
 -- 4.3 MENU CATEGORIES
-CREATE TABLE menu_categories (
+CREATE TABLE IF NOT EXISTS menu_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
@@ -67,7 +121,7 @@ CREATE TABLE menu_categories (
 );
 
 -- 4.4 MENU ITEMS
-CREATE TABLE menu_items (
+CREATE TABLE IF NOT EXISTS menu_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     category_id UUID NOT NULL REFERENCES menu_categories(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -83,7 +137,7 @@ CREATE TABLE menu_items (
 );
 
 -- 4.5 RESTAURANT TABLES
-CREATE TABLE restaurant_tables (
+CREATE TABLE IF NOT EXISTS restaurant_tables (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     number INTEGER UNIQUE NOT NULL CHECK (number > 0),
     capacity INTEGER NOT NULL CHECK (capacity > 0),
@@ -94,7 +148,7 @@ CREATE TABLE restaurant_tables (
 );
 
 -- 4.6 RESERVATIONS
-CREATE TABLE reservations (
+CREATE TABLE IF NOT EXISTS reservations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
     table_id UUID REFERENCES restaurant_tables(id) ON DELETE SET NULL,
@@ -109,7 +163,7 @@ CREATE TABLE reservations (
 );
 
 -- 4.7 ORDERS
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_number TEXT UNIQUE NOT NULL,
     customer_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
@@ -127,7 +181,7 @@ CREATE TABLE orders (
 );
 
 -- 4.8 ORDER ITEMS
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     menu_item_id UUID REFERENCES menu_items(id) ON DELETE SET NULL,
@@ -140,7 +194,7 @@ CREATE TABLE order_items (
 );
 
 -- 4.9 INVENTORY
-CREATE TABLE inventory (
+CREATE TABLE IF NOT EXISTS inventory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT UNIQUE NOT NULL,
     category TEXT NOT NULL,
@@ -154,7 +208,7 @@ CREATE TABLE inventory (
 );
 
 -- 4.10 INVENTORY LOGS
-CREATE TABLE inventory_logs (
+CREATE TABLE IF NOT EXISTS inventory_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     inventory_id UUID NOT NULL REFERENCES inventory(id) ON DELETE CASCADE,
     change_type VARCHAR(20) NOT NULL CHECK (change_type IN ('restock', 'usage', 'spoilage', 'adjustment')),
@@ -167,7 +221,7 @@ CREATE TABLE inventory_logs (
 );
 
 -- 4.11 PAYMENTS
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     customer_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
@@ -180,7 +234,7 @@ CREATE TABLE payments (
 );
 
 -- 4.12 NOTIFICATIONS
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -191,7 +245,7 @@ CREATE TABLE notifications (
 );
 
 -- 4.13 FEEDBACK
-CREATE TABLE feedback (
+CREATE TABLE IF NOT EXISTS feedback (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID REFERENCES orders(id) ON DELETE SET NULL,
     customer_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
@@ -201,7 +255,7 @@ CREATE TABLE feedback (
 );
 
 -- 4.14 STAFF ACTIVITY
-CREATE TABLE staff_activity (
+CREATE TABLE IF NOT EXISTS staff_activity (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     staff_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     action TEXT NOT NULL,
@@ -210,7 +264,7 @@ CREATE TABLE staff_activity (
 );
 
 -- 4.15 DAILY SALES
-CREATE TABLE daily_sales (
+CREATE TABLE IF NOT EXISTS daily_sales (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sale_date DATE UNIQUE NOT NULL,
     total_orders INTEGER NOT NULL DEFAULT 0 CHECK (total_orders >= 0),
@@ -227,64 +281,83 @@ CREATE TABLE daily_sales (
 -- 5. INDEXES FOR PERFORMANCE OPTIMIZATION
 -- ====================================================================
 
-CREATE INDEX idx_profiles_role_id ON profiles(role_id);
-CREATE INDEX idx_profiles_email ON profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_role_id ON profiles(role_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
 
-CREATE INDEX idx_menu_items_category_id ON menu_items(category_id);
-CREATE INDEX idx_menu_items_available ON menu_items(available);
-CREATE INDEX idx_menu_items_popular ON menu_items(popular);
+CREATE INDEX IF NOT EXISTS idx_menu_items_category_id ON menu_items(category_id);
+CREATE INDEX IF NOT EXISTS idx_menu_items_available ON menu_items(available);
+CREATE INDEX IF NOT EXISTS idx_menu_items_popular ON menu_items(popular);
 
-CREATE INDEX idx_restaurant_tables_status ON restaurant_tables(status);
-CREATE INDEX idx_restaurant_tables_section ON restaurant_tables(section);
+CREATE INDEX IF NOT EXISTS idx_restaurant_tables_status ON restaurant_tables(status);
+CREATE INDEX IF NOT EXISTS idx_restaurant_tables_section ON restaurant_tables(section);
 
-CREATE INDEX idx_reservations_customer_id ON reservations(customer_id);
-CREATE INDEX idx_reservations_table_id ON reservations(table_id);
-CREATE INDEX idx_reservations_date ON reservations(reservation_date);
-CREATE INDEX idx_reservations_status ON reservations(status);
+CREATE INDEX IF NOT EXISTS idx_reservations_customer_id ON reservations(customer_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_table_id ON reservations(table_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations(reservation_date);
+CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
 
-CREATE INDEX idx_orders_customer_id ON orders(customer_id);
-CREATE INDEX idx_orders_table_id ON orders(table_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_order_number ON orders(order_number);
-CREATE INDEX idx_orders_created_at ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_table_id ON orders(table_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 
-CREATE INDEX idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX idx_order_items_menu_item_id ON order_items(menu_item_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_menu_item_id ON order_items(menu_item_id);
 
-CREATE INDEX idx_inventory_status ON inventory(status);
-CREATE INDEX idx_inventory_category ON inventory(category);
+CREATE INDEX IF NOT EXISTS idx_inventory_status ON inventory(status);
+CREATE INDEX IF NOT EXISTS idx_inventory_category ON inventory(category);
 
-CREATE INDEX idx_inventory_logs_inventory_id ON inventory_logs(inventory_id);
-CREATE INDEX idx_inventory_logs_performed_by ON inventory_logs(performed_by);
+CREATE INDEX IF NOT EXISTS idx_inventory_logs_inventory_id ON inventory_logs(inventory_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_logs_performed_by ON inventory_logs(performed_by);
 
-CREATE INDEX idx_payments_order_id ON payments(order_id);
-CREATE INDEX idx_payments_customer_id ON payments(customer_id);
-CREATE INDEX idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+CREATE INDEX IF NOT EXISTS idx_payments_customer_id ON payments(customer_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 
-CREATE INDEX idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
 
-CREATE INDEX idx_feedback_order_id ON feedback(order_id);
-CREATE INDEX idx_feedback_customer_id ON feedback(customer_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_order_id ON feedback(order_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_customer_id ON feedback(customer_id);
 
-CREATE INDEX idx_staff_activity_staff_id ON staff_activity(staff_id);
-CREATE INDEX idx_staff_activity_created_at ON staff_activity(created_at);
+CREATE INDEX IF NOT EXISTS idx_staff_activity_staff_id ON staff_activity(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_activity_created_at ON staff_activity(created_at);
 
-CREATE INDEX idx_daily_sales_date ON daily_sales(sale_date);
+CREATE INDEX IF NOT EXISTS idx_daily_sales_date ON daily_sales(sale_date);
 
 -- ====================================================================
 -- 6. TRIGGERS FOR updated_at COLUMNS
 -- ====================================================================
 
+DROP TRIGGER IF EXISTS update_roles_updated_at ON roles;
 CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_menu_categories_updated_at ON menu_categories;
 CREATE TRIGGER update_menu_categories_updated_at BEFORE UPDATE ON menu_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_menu_items_updated_at ON menu_items;
 CREATE TRIGGER update_menu_items_updated_at BEFORE UPDATE ON menu_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_restaurant_tables_updated_at ON restaurant_tables;
 CREATE TRIGGER update_restaurant_tables_updated_at BEFORE UPDATE ON restaurant_tables FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_reservations_updated_at ON reservations;
 CREATE TRIGGER update_reservations_updated_at BEFORE UPDATE ON reservations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_inventory_updated_at ON inventory;
 CREATE TRIGGER update_inventory_updated_at BEFORE UPDATE ON inventory FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_payments_updated_at ON payments;
 CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_daily_sales_updated_at ON daily_sales;
 CREATE TRIGGER update_daily_sales_updated_at BEFORE UPDATE ON daily_sales FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ====================================================================
@@ -306,9 +379,3 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_activity ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_sales ENABLE ROW LEVEL SECURITY;
-
- C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r s _ c u s t o m e r _ i d   O N   o r d e r s ( c u s t o m e r _ i d ) ; 
- C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r s _ s t a t u s   O N   o r d e r s ( s t a t u s ) ; 
- C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r s _ c r e a t e d _ a t   O N   o r d e r s ( c r e a t e d _ a t   D E S C ) ; 
- C R E A T E   I N D E X   I F   N O T   E X I S T S   i d x _ o r d e r _ i t e m s _ o r d e r _ i d   O N   o r d e r _ i t e m s ( o r d e r _ i d ) ;  
- 

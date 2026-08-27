@@ -37,17 +37,17 @@ async function main() {
   try {
     console.log("🚀 Checking database setup...");
 
-    // Check if database is already initialized by looking for 'roles' table
+    // Check if database is already initialized by looking for 'reservations' table
     const checkTable = await client.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'roles'
+        AND table_name = 'reservations'
       );
     `);
 
     if (checkTable.rows[0].exists) {
-      console.log("ℹ️ Database is already initialized (roles table exists). Skipping full schema/seed reload.");
+      console.log("ℹ️ Database is already initialized (reservations table exists). Skipping full schema/seed reload.");
       return;
     }
 
