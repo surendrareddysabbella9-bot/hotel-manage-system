@@ -281,7 +281,7 @@ router.get('/:table', async (req, res) => {
         filters.push(['id', userId]);
       }
     } else if (userRole === 'customer') {
-      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
+      const restrictedTables = ['inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
       if (restrictedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Access denied to internal tables' });
       }
@@ -353,7 +353,7 @@ router.get('/:table/:id', async (req, res) => {
         return res.status(403).json({ error: 'Forbidden: Profile does not belong to you' });
       }
     } else if (userRole === 'customer') {
-      const restrictedTables = ['inventory', 'inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
+      const restrictedTables = ['inventory_logs', 'staff_activity', 'daily_sales', 'roles'];
       if (restrictedTables.includes(table)) {
         return res.status(403).json({ error: 'Forbidden: Access denied to internal tables' });
       }

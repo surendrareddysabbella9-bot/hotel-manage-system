@@ -12,7 +12,7 @@ const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // Helper to gracefully fallback models on 503 (High Demand) errors
 async function generateWithRetry(genAI, prompt) {
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+  const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
   let lastError = null;
 
   for (const modelName of models) {
@@ -21,8 +21,8 @@ async function generateWithRetry(genAI, prompt) {
       return await model.generateContent(prompt);
     } catch (err) {
       lastError = err;
-      if (err.status === 503) {
-        console.warn(`[AI Fallback] ${modelName} returned 503, trying next model...`);
+      if (err.status === 503 || err.status === 404) {
+        console.warn(`[AI Fallback] ${modelName} returned status ${err.status}, trying next model...`);
         continue;
       }
       throw err; 
