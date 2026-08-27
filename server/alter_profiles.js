@@ -11,6 +11,7 @@ async function main() {
   try {
     await pool.query(`
       ALTER TABLE profiles 
+      ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255),
       ADD COLUMN IF NOT EXISTS security_question VARCHAR(255),
       ADD COLUMN IF NOT EXISTS security_answer_hash VARCHAR(255),
       ADD COLUMN IF NOT EXISTS loyalty_points INTEGER DEFAULT 0,

@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     full_name TEXT NOT NULL,
     avatar_url TEXT,
     phone TEXT,
+    password_hash VARCHAR(255),
     loyalty_tier VARCHAR(20) NOT NULL DEFAULT 'Silver',
     loyalty_points INTEGER NOT NULL DEFAULT 0 CHECK (loyalty_points >= 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

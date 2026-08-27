@@ -13,6 +13,7 @@ import searchRoutes from './routes/search.js';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: '*' }
